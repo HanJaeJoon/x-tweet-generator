@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Newtonsoft.Json;
 using System.Text;
 using Tweetinvi;
 using Tweetinvi.Models;
@@ -26,13 +25,13 @@ public class TweetController
     [HttpPost("")]
     public async Task PostTweet()
     {
-        var tweet = "이 트윗은 .NET으로 작성되었습니다.\n추석 기념 API 테스트 중입니다.";
+        var tweet = "이 트윗은 .NET으로 작성되었습니다.";
         var userClient = new TwitterClient(_consumerKey, _consumerKeySecret, _accessKey, _accessKeySecret);
 
         var result = await userClient.Execute.AdvanceRequestAsync(
             (ITwitterRequest request) =>
             {
-                var jsonBody = userClient.Json.Serialize(new PostTweetRequest { Text = tweet });
+                var jsonBody = userClient.Json.Serialize(new { Text = tweet });
                 var content = new StringContent(jsonBody, Encoding.UTF8, "application/json");
 
                 request.Query.Url = "https://api.twitter.com/2/tweets";
@@ -45,42 +44,5 @@ public class TweetController
         {
             throw new Exception($"Error when posting tweet:\n{result.Content}");
         }
-
-        /*
-        using var httpClient = new HttpClient();
-        httpClient.BaseAddress = new Uri("https://api.twitter.com/2/tweets/");
-
-        httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(
-            "OAuth",
-            $"oauth_consumer_key=\"{_consumerKey}\"," +
-            $"oauth_token=\"{_accessKey}\"," +
-            $"oauth_signature_method=\"HMAC-SHA1\"," +
-            $"oauth_timestamp=\"{new DateTimeOffset(DateTime.UtcNow).ToUnixTimeSeconds()}\"," +
-            $"oauth_nonce=\"{Guid.NewGuid()}\"," +
-            $"oauth_version=\"1.0\"," +
-            $"oauth_signature=\"{_consumerKeySecret}&{_accessKeySecret}\""
-        );
-
-        var content = new StringContent($"status={tweetText}");
-        content.Headers.ContentType = new MediaTypeHeaderValue("application/x-www-form-urlencoded");
-
-        var response = await httpClient.PostAsync("update.json", content);
-
-        if (response.IsSuccessStatusCode)
-        {
-            var responseBody = await response.Content.ReadAsStringAsync();
-            Console.WriteLine(responseBody);
-        }
-        else
-        {
-            Console.WriteLine($"Error: {response.StatusCode}");
-        }
-        */
-    }
-
-    public record PostTweetRequest
-    {
-        [JsonProperty("text")]
-        public string Text { get; init; } = string.Empty;
     }
 }
