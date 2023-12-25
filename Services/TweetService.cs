@@ -8,7 +8,7 @@ namespace XGenerator.Services;
 
 public class TweetService(Configuration configuration)
 {
-    public async Task PostTweet(string tweet)
+    public async Task PostTweet(string tweet, byte[]? image = null)
     {
         var userClient = new TwitterClient(
             configuration.ConsumerKey,
@@ -17,10 +17,21 @@ public class TweetService(Configuration configuration)
             configuration.AccessKeySecret
         );
 
+        var parameters = new TweetV2PostRequest() { Text = tweet };
+
+        if (image?.Length > 0)
+        {
+            var uploadedImage = await userClient.Upload.UploadTweetImageAsync(image);
+            if (uploadedImage?.Id is not null)
+            {
+                parameters.Media = new TweetV2Attacthments { MediaIds = [uploadedImage.Id.ToString()!], };
+            }
+        }
+
         var result = await userClient.Execute.AdvanceRequestAsync(
             (ITwitterRequest request) =>
             {
-                var jsonBody = JsonSerializer.Serialize(new TweetV2PostRequest() { Text = tweet });
+                var jsonBody = JsonSerializer.Serialize(parameters);
                 var content = new StringContent(jsonBody, Encoding.UTF8, "application/json");
 
                 request.Query.Url = "https://api.twitter.com/2/tweets";
@@ -35,9 +46,18 @@ public class TweetService(Configuration configuration)
         }
     }
 
-    public record TweetV2PostRequest
+    private record TweetV2PostRequest
     {
         [JsonPropertyName("text")]
         public required string Text { get; init; }
+
+        [JsonPropertyName("media")]
+        public TweetV2Attacthments? Media { get; set; }
+    }
+
+    private record TweetV2Attacthments
+    {
+        [JsonPropertyName("media_ids")]
+        public required string[] MediaIds { get; init; }
     }
 }
