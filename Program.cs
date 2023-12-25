@@ -5,13 +5,15 @@ var builder = WebApplication.CreateBuilder(args);
 var environment = builder.Environment;
 var config = new ConfigurationBuilder()
     .AddJsonFile($"appsettings.{environment.EnvironmentName}.json")
-    .Build()
-    .GetSection("X")
-    .Get<Configuration>() ?? throw new Exception("Can not load appsettings")
-    ;
+    .Build();
 
-builder.Services.AddSingleton(config);
+var xConfig = config.GetSection("X").Get<XConfiguration>() ?? throw new Exception("Can not load appsettings");
+var openAiConfig = config.GetSection("OpenAi").Get<OpenAiConfiguration>() ?? throw new Exception("Can not load appsettings");
+
+builder.Services.AddSingleton(xConfig);
+builder.Services.AddSingleton(openAiConfig);
 builder.Services.AddTransient<TweetService>();
+builder.Services.AddTransient<OpenAiService>();
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();

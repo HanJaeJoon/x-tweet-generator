@@ -6,7 +6,7 @@ using Tweetinvi.Models;
 
 namespace XGenerator.Services;
 
-public class TweetService(Configuration configuration)
+public class TweetService(XConfiguration configuration)
 {
     public async Task PostTweet(string tweet, byte[]? image = null)
     {
