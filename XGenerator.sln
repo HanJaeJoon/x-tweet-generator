@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.8.34004.107
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TrendX", "TrendX.csproj", "{B9B2A55B-8112-4C4A-A48C-61180DC765B6}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "XGenerator", "XGenerator.csproj", "{B9B2A55B-8112-4C4A-A48C-61180DC765B6}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
