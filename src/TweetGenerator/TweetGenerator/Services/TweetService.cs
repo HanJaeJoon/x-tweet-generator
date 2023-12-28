@@ -9,10 +9,10 @@ namespace TweetGenerator.Services;
 
 public class TweetService(IConfiguration configuration)
 {
-    private readonly string _consumerKey = configuration["OpenAiApiKey"] ?? throw new InvalidOperationException();
-    private readonly string _consumerKeySecret = configuration["OpenAiApiKey"] ?? throw new InvalidOperationException();
-    private readonly string _accessKey = configuration["OpenAiApiKey"] ?? throw new InvalidOperationException();
-    private readonly string _accessKeySecret = configuration["OpenAiApiKey"] ?? throw new InvalidOperationException();
+    private readonly string _consumerKey = configuration["XConsumerKey"] ?? throw new InvalidOperationException();
+    private readonly string _consumerKeySecret = configuration["XConsumerKeySecret"] ?? throw new InvalidOperationException();
+    private readonly string _accessKey = configuration["XAccessKey"] ?? throw new InvalidOperationException();
+    private readonly string _accessKeySecret = configuration["XAccessKeySecret"] ?? throw new InvalidOperationException();
 
     public async Task PostTweet(string tweet, byte[]? image = null)
     {
@@ -58,6 +58,7 @@ public class TweetService(IConfiguration configuration)
         public required string Text { get; init; }
 
         [JsonPropertyName("media")]
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public TweetV2Attacthments? Media { get; set; }
     }
 

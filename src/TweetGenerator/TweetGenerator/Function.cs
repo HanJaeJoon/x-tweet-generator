@@ -1,4 +1,4 @@
-using Microsoft.Azure.Functions.Worker;
+ï»¿using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Logging;
 using TweetGenerator.Services;
 
@@ -22,7 +22,7 @@ public class Function(ILoggerFactory loggerFactory, YahooFinanceService yahooFin
 
         byte[] imageByte = [];
 
-        // JJ: ÀÏ´Ü Å©·¹µ÷ ¾Æ³¢ÀÚ
+        // JJ: ì¼ë‹¨ í¬ë ˆë”§ ì•„ë¼ì
 #pragma warning disable CS0162 // Unreachable code detected
         if (false)
         {
@@ -32,11 +32,11 @@ public class Function(ILoggerFactory loggerFactory, YahooFinanceService yahooFin
 
         _logger.LogInformation($"post tweet using X API");
         string content = $"""
-            [API Å×½ºÆ®]
-            ÇöÀç Å×½½¶ó ÁÖ°¡´Â {string.Format("{0:N2}", price)}$ ÀÔ´Ï´Ù.
-            ¾îÁ¦º¸´Ù {string.Format("{0:N2}", change)} ({string.Format("{0:N2}", changePercent)}%) {(change > 0 ? "»ó½Â" : "ÇÏ¶ô")}Çß½À´Ï´Ù.
+        [API í…ŒìŠ¤íŠ¸]
+        í˜„ì¬ í…ŒìŠ¬ë¼ ì£¼ê°€ëŠ” {string.Format("{0:N2}", price)}$ ì…ë‹ˆë‹¤.
+        ì–´ì œë³´ë‹¤ {string.Format("{0:N2}", change)} ({string.Format("{0:N2}", changePercent)}%) {(change > 0 ? "ìƒìŠ¹" : "í•˜ë½")}í–ˆìŠµë‹ˆë‹¤.
         """;
         _logger.LogInformation(content);
-        //await tweetService.PostTweet(content, imageByte);
+        await tweetService.PostTweet(content, imageByte);
     }
 }
