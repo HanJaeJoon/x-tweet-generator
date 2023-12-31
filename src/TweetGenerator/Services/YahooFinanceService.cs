@@ -6,25 +6,34 @@ namespace TweetGenerator.Services;
 public class YahooFinanceService(ILoggerFactory loggerFactory)
 {
     private readonly ILogger _logger = loggerFactory.CreateLogger<YahooFinanceService>();
-    private const string _symbol = "TSLA";
+    private static readonly Field[] _fields = [
+        Field.MarketState,
+        Field.Symbol, Field.ShortName,
+        Field.RegularMarketTime, Field.RegularMarketPrice, Field.RegularMarketChange, Field.RegularMarketChangePercent
+    ];
 
-    public async Task<(double, double, double)> GetPriceInfo()
+    public async Task<(string, string, DateTime, double, double, double)> GetPriceInfo(string symbol)
     {
-        var security = await Yahoo.Symbols(_symbol)
-            .Fields(Field.Symbol, Field.RegularMarketPrice, Field.RegularMarketChange, Field.RegularMarketChangePercent)
-            .QueryAsync();
-        var tsla = security[_symbol];
-        var currentPrice = tsla.RegularMarketPrice;
-        var change = tsla.RegularMarketChange;
-        var changePercent = tsla.RegularMarketChangePercent;
+        var security = await Yahoo.Symbols(symbol).Fields(_fields).QueryAsync();
 
-        //var history = await Yahoo.GetHistoricalAsync(_symbol, DateTime.Today.AddDays(-1), DateTime.Today, Period.Daily);
+        var stockInfo = security[symbol];
+        var marketState = stockInfo.MarketState;
+        var stockName = stockInfo.ShortName;
+        var currentPrice = stockInfo.RegularMarketPrice;
+        var change = stockInfo.RegularMarketChange;
+        var changePercent = stockInfo.RegularMarketChangePercent;
+        var regularMarketTime = stockInfo.RegularMarketTime;
 
-        //foreach (var candle in history)
-        //{
-        //    _logger.LogInformation($"DateTime: {candle.DateTime}, Open: {candle.Open}, High: {candle.High}, Low: {candle.Low}, Close: {candle.Close}, Volume: {candle.Volume}, AdjustedClose: {candle.AdjustedClose}");
-        //}
+        return (marketState, stockName, DateTimeOffset.FromUnixTimeSeconds(regularMarketTime).UtcDateTime, currentPrice, change, changePercent);
+    }
 
-        return (currentPrice, change, changePercent);
+    public async Task GetStockHistory(string symbol)
+    {
+        var history = await Yahoo.GetHistoricalAsync(symbol, DateTime.Today.AddDays(-1), DateTime.Today, Period.Daily);
+
+        foreach (var candle in history)
+        {
+            _logger.LogInformation($"DateTime: {candle.DateTime}, Open: {candle.Open}, High: {candle.High}, Low: {candle.Low}, Close: {candle.Close}, Volume: {candle.Volume}, AdjustedClose: {candle.AdjustedClose}");
+        }
     }
 }
