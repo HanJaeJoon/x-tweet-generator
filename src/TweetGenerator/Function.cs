@@ -49,12 +49,12 @@ public class Function(ILoggerFactory loggerFactory, YahooFinanceService yahooFin
             .Replace("[priceChange]", string.Format("{0:N2}", change))
             ;
 
-        // JJ: 일단 크레딧 아끼자
-        //imageByte = await openAiService.CreateImage(prompt);
+        imageByte = await openAiService.CreateImage(prompt);
 
         _logger.LogInformation($"post tweet using X API");
         string content = $"""
-        {estMarketTime:yyyy-MM-dd} {stockName} stock price is ${string.Format("{0:N2}", price)}
+        [{estMarketTime:yyyy-MM-dd}] the stock price of {stockName}
+        ${string.Format("{0:N2}", price)}
         {(change > 0 ? "+" : "")}{string.Format("{0:N2}", change)} ({string.Format("{0:N2}", changePercent)}%)
         """;
 
