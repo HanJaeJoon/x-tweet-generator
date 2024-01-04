@@ -6,17 +6,19 @@ namespace TweetGenerator.Services;
 public class OpenAiService(IConfiguration configuration)
 {
     private const string _positivePrompt = """
-        Generate an image of a [character] inin an office, reacting to rise of [stockName]'s stock price.
-        The digital display shows [stockName]'s stock price at $[currentPrice], with a green arrow indicating an upward trend.
-        The intensity of the person's joy (smiling, cheering, jumping) should correlate with the stock price increase from a baseline
+        Generate an image of a [character] in an office, reacting to rise of [stockName]'s stock price.
+        The digital display shows [stockName]'s stock price at $[currentPrice], with the graph shows a candlestick chart moving upward.
         (e.g., The price of the stock increased by $[priceChange] to $[currentPrice])
+        If you can't draw company name correctly, you might as well not draw it at all.
+        The intensity of the [character]'s joy (smiling, cheering, jumping) should correlate with the stock price increase from a baseline
         Background elements like confetti or colleagues celebrating can be added for larger increases.
     """;
     private const string _negativePrompt = """
         Generate an image of a [character] in an office, reacting to a decline in [stockName]'s stock price.
-        The computer screen displays [stockName]'s stock at $[currentPrice], with a red arrow showing a downward trend.
-        The degree of the person's sadness (head in hands, slumped posture, distraught expression) should reflect the stock price drop from a baseline
+        The computer screen displays [stockName]'s stock at $[currentPrice], with the graph shows a candlestick chart moving downward.
         (e.g., The price of the stock dropped by $[priceChange] to $[currentPrice])
+        If you can't draw company name correctly, you might as well not draw it at all.
+        The degree of the [character]'s sadness (head in hands, slumped posture, distraught expression) should reflect the stock price drop from a baseline
         Background elements like scattered papers or a dimly lit room can intensify for larger decreases.
     """;
 
