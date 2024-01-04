@@ -12,19 +12,26 @@ public class YahooFinanceService(ILoggerFactory loggerFactory)
         Field.RegularMarketTime, Field.RegularMarketPrice, Field.RegularMarketChange, Field.RegularMarketChangePercent
     ];
 
-    public async Task<(string, string, DateTime, double, double, double)> GetPriceInfo(string symbol)
+    public async Task<IList<(string, string, DateTime, double, double, double)>> GetPriceInfo(string[] symbols)
     {
-        var security = await Yahoo.Symbols(symbol).Fields(_fields).QueryAsync();
+        var security = await Yahoo.Symbols(symbols).Fields(_fields).QueryAsync();
 
-        var stockInfo = security[symbol];
-        var marketState = stockInfo.MarketState;
-        var stockName = stockInfo.ShortName;
-        var currentPrice = stockInfo.RegularMarketPrice;
-        var change = stockInfo.RegularMarketChange;
-        var changePercent = stockInfo.RegularMarketChangePercent;
-        var regularMarketTime = stockInfo.RegularMarketTime;
+        List<(string, string, DateTime, double, double, double)> results = [];
 
-        return (marketState, stockName, DateTimeOffset.FromUnixTimeSeconds(regularMarketTime).UtcDateTime, currentPrice, change, changePercent);
+        foreach (var symbol in symbols)
+        {
+            var stockInfo = security[symbol];
+            var marketState = stockInfo.MarketState;
+            var stockName = stockInfo.ShortName;
+            var currentPrice = stockInfo.RegularMarketPrice;
+            var change = stockInfo.RegularMarketChange;
+            var changePercent = stockInfo.RegularMarketChangePercent;
+            var regularMarketTime = stockInfo.RegularMarketTime;
+
+            results.Add((marketState, stockName, DateTimeOffset.FromUnixTimeSeconds(regularMarketTime).UtcDateTime, currentPrice, change, changePercent));
+        }
+
+        return results;
     }
 
     public async Task GetStockHistory(string symbol)

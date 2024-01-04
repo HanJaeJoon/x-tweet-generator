@@ -1,12 +1,14 @@
 ﻿using Microsoft.Azure.Functions.Worker;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using TweetGenerator.Services;
 
 namespace TweetGenerator;
 
-public class Function(ILoggerFactory loggerFactory, YahooFinanceService yahooFinanceService, OpenAiService openAiService, TweetService tweetService)
+public class Function(IConfiguration configuration, ILoggerFactory loggerFactory,
+    YahooFinanceService yahooFinanceService, OpenAiService openAiService, TweetService tweetService)
 {
-    private const string _symbol = "TSLA";
+    private readonly string[] _symbols = configuration["symbols"].Split(',');
 
     private readonly ILogger _logger = loggerFactory.CreateLogger<Function>();
 
@@ -20,7 +22,10 @@ public class Function(ILoggerFactory loggerFactory, YahooFinanceService yahooFin
         )
     {
         _logger.LogDebug($"get stock price using Yahoo Finance API");
-        var (marketState, stockName, marketTime, price, change, changePercent) = await yahooFinanceService.GetPriceInfo(_symbol);
+        var result = await yahooFinanceService.GetPriceInfo(_symbols);
+
+        // JJ: multi symbols support
+        var (marketState, stockName, marketTime, price, change, changePercent) = result.First();
 
         _logger.LogDebug($"validate");
         if (marketState is "OPEN")
@@ -53,7 +58,8 @@ public class Function(ILoggerFactory loggerFactory, YahooFinanceService yahooFin
 
         _logger.LogInformation($"post tweet using X API");
         string content = $"""
-        [{estMarketTime:yyyy-MM-dd}] the stock price of {stockName}
+        [{estMarketTime:yyyy-MM-dd}]
+        the stock price of {stockName}
         ${string.Format("{0:N2}", price)}
         {(change > 0 ? "+" : "")}{string.Format("{0:N2}", change)} ({string.Format("{0:N2}", changePercent)}%)
         """;
