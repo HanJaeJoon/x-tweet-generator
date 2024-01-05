@@ -1,6 +1,7 @@
 ﻿using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using SlackAPI;
 using TweetGenerator.Services;
 
 namespace TweetGenerator;
@@ -65,5 +66,16 @@ public class Function(IConfiguration configuration, ILoggerFactory loggerFactory
         """;
 
         await tweetService.PostTweet(content, imageByte);
+
+        var slackToken = configuration["SlackToken"];
+        var client = new SlackTaskClient(slackToken);
+        var channel = configuration["SlackChannel"];
+
+        var response = await client.PostMessageAsync(channel, content);
+
+        if (!response.ok)
+        {
+            _logger.LogError($"Message sending failed. error: {response.error}");
+        }
     }
 }

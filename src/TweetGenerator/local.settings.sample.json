@@ -9,6 +9,8 @@
     "XAccessKey": "",
     "XAccessKeySecret": "",
     "XBearerToken": "",
-    "OpenAiApiKey": ""
+    "OpenAiApiKey": "",
+    "SlackToken": "",
+    "SlackChannel": ""
   }
 }
