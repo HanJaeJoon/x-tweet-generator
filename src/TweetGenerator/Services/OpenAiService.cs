@@ -48,7 +48,7 @@ public class OpenAiService(IConfiguration configuration)
         return prompt;
     }
 
-    public async Task<byte[]> CreateImage(string prompt)
+    public async Task<(byte[], string)> CreateImage(string prompt)
     {
         var api = new OpenAIAPI(_apiKey);
         var result = await api.ImageGenerations.CreateImageAsync(prompt, OpenAI_API.Models.Model.DALLE3);
@@ -57,6 +57,6 @@ public class OpenAiService(IConfiguration configuration)
         using var httpClient = new HttpClient();
         var byteArray = await httpClient.GetByteArrayAsync(url);
 
-        return byteArray;
+        return (byteArray, url);
     }
 }

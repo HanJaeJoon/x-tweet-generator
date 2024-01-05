@@ -55,7 +55,9 @@ public class Function(IConfiguration configuration, ILoggerFactory loggerFactory
             .Replace("[priceChange]", string.Format("{0:N2}", change))
             ;
 
-        imageByte = await openAiService.CreateImage(prompt);
+        var (createdImageByte, imageUrl) = await openAiService.CreateImage(prompt);
+
+        imageByte = createdImageByte;
 
         _logger.LogInformation($"post tweet using X API");
         string content = $"""
@@ -70,8 +72,13 @@ public class Function(IConfiguration configuration, ILoggerFactory loggerFactory
         var slackToken = configuration["SlackToken"];
         var client = new SlackTaskClient(slackToken);
         var channel = configuration["SlackChannel"];
+        var attachment = new Attachment()
+        {
+            image_url = imageUrl,
+            fallback = "(image created with DALL-E 3 in Open AI)",
+        };
 
-        var response = await client.PostMessageAsync(channel, content);
+        var response = await client.PostMessageAsync(channel, content, attachments: [attachment]);
 
         if (!response.ok)
         {
