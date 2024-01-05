@@ -28,7 +28,7 @@ public class Function(IConfiguration configuration, ILoggerFactory loggerFactory
         var (marketState, stockName, marketTime, price, change, changePercent) = result.First();
 
         _logger.LogDebug($"validate");
-        if (marketState is "OPEN")
+        if (marketState is "REGULAR")
         {
             _logger.LogInformation($"Market is open");
             return;
