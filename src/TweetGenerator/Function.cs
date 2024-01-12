@@ -6,6 +6,7 @@ using TweetGenerator.Services;
 
 namespace TweetGenerator;
 
+// JJ: test project 추가 필요
 public class Function(IConfiguration configuration, ILoggerFactory loggerFactory,
     YahooFinanceService yahooFinanceService, OpenAiService openAiService, TweetService tweetService)
 {
@@ -78,6 +79,8 @@ public class Function(IConfiguration configuration, ILoggerFactory loggerFactory
             fallback = "(image created with DALL-E 3 in Open AI)",
         };
 
+        // JJ: DALL-E 3 최소 용량으로 이미지 생성해도 3MB가 넘어서 슬랙에서 안 보이는 문제
+        // html trigger 사용 하는 방법?
         var response = await client.PostMessageAsync(channel, content, attachments: [attachment]);
 
         if (!response.ok)
