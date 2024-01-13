@@ -6,7 +6,6 @@ using TweetGenerator.Services;
 
 namespace TweetGenerator;
 
-// JJ: test project 추가 필요
 public class Function(IConfiguration configuration, ILoggerFactory loggerFactory,
     YahooFinanceService yahooFinanceService, OpenAiService openAiService, TweetService tweetService)
 {
@@ -28,6 +27,7 @@ public class Function(IConfiguration configuration, ILoggerFactory loggerFactory
 
         // JJ: multi symbols support
         var (marketState, stockName, marketTime, price, change, changePercent) = result.First();
+        var symbol = _symbols.First();
 
         _logger.LogDebug($"validate");
         if (marketState is "REGULAR")
@@ -63,10 +63,19 @@ public class Function(IConfiguration configuration, ILoggerFactory loggerFactory
         _logger.LogInformation($"post tweet using X API");
         string content = $"""
         [{estMarketTime:yyyy-MM-dd}]
-        the stock price of {stockName}
+        the stock price of {GetStockNameForX(symbol)}
         ${string.Format("{0:N2}", price)}
         {(change > 0 ? "+" : "")}{string.Format("{0:N2}", change)} ({string.Format("{0:N2}", changePercent)}%)
         """;
+
+        static string? GetStockNameForX(string symbol)
+        {
+            return symbol switch
+            {
+                "TSLA" => "$TSLA",
+                _ => $"#{symbol}",
+            };
+        }
 
         await tweetService.PostTweet(content, imageByte);
 
