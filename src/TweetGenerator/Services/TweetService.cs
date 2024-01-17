@@ -4,6 +4,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using Tweetinvi;
 using Tweetinvi.Models;
+using Tweetinvi.Models.V2;
 
 namespace TweetGenerator.Services;
 
@@ -14,7 +15,7 @@ public class TweetService(IConfiguration configuration)
     private readonly string _accessKey = configuration["XAccessKey"] ?? throw new InvalidOperationException();
     private readonly string _accessKeySecret = configuration["XAccessKeySecret"] ?? throw new InvalidOperationException();
 
-    public async Task PostTweet(string tweet, byte[]? image = null)
+    public async Task<string?> PostTweet(string tweet, byte[]? image = null)
     {
         var userClient = new TwitterClient(
             _consumerKey,
@@ -50,6 +51,19 @@ public class TweetService(IConfiguration configuration)
         {
             throw new Exception($"Error when posting tweet:\n{result.Content}");
         }
+
+        var content = result.Response.Content;
+        var tweetContent = JsonSerializer.Deserialize<TweetContent>(content);
+
+        return tweetContent?.Data?.TweetIds?.FirstOrDefault();
+    }
+
+    public async Task<TweetV2> GetTweetInfo(long id)
+    {
+        var credentials = new TwitterCredentials(_consumerKey, _consumerKeySecret, _accessKey, _accessKeySecret);
+        var client = new TwitterClient(credentials);
+        var response = await client.TweetsV2.GetTweetAsync(id);
+        return response.Tweet;
     }
 
     private record TweetV2PostRequest
@@ -66,5 +80,24 @@ public class TweetService(IConfiguration configuration)
     {
         [JsonPropertyName("media_ids")]
         public required string[] MediaIds { get; init; }
+    }
+
+
+    public class TweetContent
+    {
+        [JsonPropertyName("data")]
+        public Data? Data { get; set; }
+    }
+
+    public class Data
+    {
+        [JsonPropertyName("edit_history_tweet_ids")]
+        public string[]? TweetIds { get; set; }
+
+        [JsonPropertyName("id")]
+        public string? Id { get; set; }
+
+        [JsonPropertyName("text")]
+        public string? Text { get; set; }
     }
 }
