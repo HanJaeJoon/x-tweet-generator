@@ -58,6 +58,7 @@ public class TweetService(IConfiguration configuration)
         return tweetContent?.Data?.TweetIds?.FirstOrDefault();
     }
 
+    // X API Free Tier에서 Read 권한 없음
     public async Task<TweetV2> GetTweetInfo(long id)
     {
         var credentials = new TwitterCredentials(_consumerKey, _consumerKeySecret, _accessKey, _accessKeySecret);
