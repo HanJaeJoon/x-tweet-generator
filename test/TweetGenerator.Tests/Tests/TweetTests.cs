@@ -1,7 +1,7 @@
 ﻿using TweetGenerator.Services;
 using TweetGenerator.Tests.Fixtures;
 
-namespace TweetGenerator.Tests;
+namespace TweetGenerator.Tests.Tests;
 
 public class TweetTests(ConfigurationFixture fixture) : IClassFixture<ConfigurationFixture>
 {
@@ -24,5 +24,7 @@ public class TweetTests(ConfigurationFixture fixture) : IClassFixture<Configurat
     {
         var tweetId = 1747990594163810427;
         var tweet = await _tweetSerivce.GetTweetInfo(tweetId);
+
+        Assert.NotNull(tweet);
     }
 }
