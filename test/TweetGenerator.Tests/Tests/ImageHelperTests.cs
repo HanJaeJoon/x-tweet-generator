@@ -14,5 +14,10 @@ public class ImageHelperTests
 
         Assert.NotEmpty(compressedImage);
         Assert.True(fileContent.Length > compressedImage.Length);
+
+        //var filePath = @"C:\Users\jj272\Downloads\test.jpg";
+
+        //using var stream = new FileStream(filePath, FileMode.Create);
+        //stream.Write(compressedImage);
     }
 }

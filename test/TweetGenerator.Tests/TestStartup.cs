@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
 namespace TweetGenerator.Tests;
@@ -11,5 +12,9 @@ public class TestStartup
         {
             builder.AddConsole();
         });
+
+        services.AddSingleton<IConfiguration>(new ConfigurationBuilder()
+            .AddJsonFile("test.settings.json", false, true)
+            .Build());
     }
 }

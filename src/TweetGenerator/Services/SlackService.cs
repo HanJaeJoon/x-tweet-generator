@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using SlackAPI;
+using TweetGenerator.utils;
 
 namespace TweetGenerator.Services;
 
@@ -30,4 +31,10 @@ public class SlackService(IConfiguration configuration, ILoggerFactory loggerFac
         }
     }
 
+    public async Task UploadFile(byte[] image)
+    {
+        var client = new SlackTaskClient(_slackToken);
+        var compressedImage = ImageHelper.CompressImage(image);
+        var result = await client.UploadFileAsync(compressedImage, "test.jpg", [_channel], title: "테스트", initialComment: "테스트 이미지");
+    }
 }

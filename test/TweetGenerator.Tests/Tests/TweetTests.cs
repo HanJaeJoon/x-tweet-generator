@@ -1,11 +1,12 @@
-﻿using TweetGenerator.Services;
+﻿using Microsoft.Extensions.DependencyInjection;
+using TweetGenerator.Services;
 using TweetGenerator.Tests.Fixtures;
 
 namespace TweetGenerator.Tests.Tests;
 
-public class TweetTests(ConfigurationFixture fixture) : IClassFixture<ConfigurationFixture>
+public class TweetTests(TweetServiceFixture fixture) : IClassFixture<TweetServiceFixture>
 {
-    private readonly TweetService _tweetSerivce = new(fixture.Configuration);
+    private readonly TweetService _tweetSerivce = fixture.ServiceProvider.GetRequiredService<TweetService>();
 
     [Fact]
     public async Task PostTweet_WithImage_Successfully()

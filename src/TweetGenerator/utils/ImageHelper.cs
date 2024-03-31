@@ -14,7 +14,7 @@ public static class ImageHelper
 
         var encoder = new JpegEncoder()
         {
-            Quality = 50, // 1 ~ 100 (default: 75)
+            Quality = 100, // 1 ~ 100 (default: 75)
         };
 
         using var memoryStream = new MemoryStream();
