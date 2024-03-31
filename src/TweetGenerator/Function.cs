@@ -1,13 +1,12 @@
 ﻿using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using SlackAPI;
 using TweetGenerator.Services;
 
 namespace TweetGenerator;
 
 public class Function(IConfiguration configuration, ILoggerFactory loggerFactory,
-    YahooFinanceService yahooFinanceService, OpenAiService openAiService, TweetService tweetService)
+    YahooFinanceService yahooFinanceService, OpenAiService openAiService, TweetService tweetService, SlackService slackService)
 {
     private readonly string[] _symbols = configuration["symbols"].Split(',');
 
@@ -36,10 +35,10 @@ public class Function(IConfiguration configuration, ILoggerFactory loggerFactory
             return;
         }
 
-        TimeZoneInfo estZone = TimeZoneInfo.FindSystemTimeZoneById("Eastern Standard Time");
+        var estZone = TimeZoneInfo.FindSystemTimeZoneById("Eastern Standard Time");
 
-        DateTime estNow = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, estZone);
-        DateTime estMarketTime = TimeZoneInfo.ConvertTimeFromUtc(marketTime, estZone);
+        var estNow = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, estZone);
+        var estMarketTime = TimeZoneInfo.ConvertTimeFromUtc(marketTime, estZone);
 
         if (estMarketTime.Day != estNow.Day)
         {
@@ -61,7 +60,7 @@ public class Function(IConfiguration configuration, ILoggerFactory loggerFactory
         imageByte = createdImageByte;
 
         _logger.LogInformation($"post tweet using X API");
-        string content = $"""
+        var content = $"""
         [{estMarketTime:yyyy-MM-dd}]
         the stock price of {GetStockNameForX(symbol)}
         ${string.Format("{0:N2}", price)}
@@ -78,23 +77,6 @@ public class Function(IConfiguration configuration, ILoggerFactory loggerFactory
         }
 
         await tweetService.PostTweet(content, imageByte);
-
-        var slackToken = configuration["SlackToken"];
-        var client = new SlackTaskClient(slackToken);
-        var channel = configuration["SlackChannel"];
-        var attachment = new Attachment()
-        {
-            image_url = imageUrl,
-            fallback = "(image created with DALL-E 3 in Open AI)",
-        };
-
-        // JJ: DALL-E 3 최소 용량으로 이미지 생성해도 3MB가 넘어서 슬랙에서 안 보이는 문제
-        // html trigger 사용 하는 방법?
-        var response = await client.PostMessageAsync(channel, content, attachments: [attachment]);
-
-        if (!response.ok)
-        {
-            _logger.LogError($"Message sending failed. error: {response.error}");
-        }
+        await slackService.SendMessage(content, imageUrl);
     }
 }

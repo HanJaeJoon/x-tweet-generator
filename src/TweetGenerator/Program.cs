@@ -9,9 +9,12 @@ var host = new HostBuilder()
     {
         services.AddApplicationInsightsTelemetryWorkerService();
         services.ConfigureFunctionsApplicationInsights();
-        services.AddTransient<YahooFinanceService>();
-        services.AddTransient<OpenAiService>();
-        services.AddTransient<TweetService>();
+        services
+            .AddTransient<YahooFinanceService>()
+            .AddTransient<OpenAiService>()
+            .AddTransient<TweetService>()
+            .AddTransient<SlackService>()
+        ;
     })
 .Build();
 
