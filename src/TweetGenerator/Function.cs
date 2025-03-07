@@ -8,8 +8,7 @@ namespace TweetGenerator;
 public class Function(IConfiguration configuration, ILoggerFactory loggerFactory,
     YahooFinanceService yahooFinanceService, OpenAiService openAiService, TweetService tweetService, SlackService slackService)
 {
-    private readonly string[] _symbols = configuration["symbols"].Split(',');
-
+    private readonly string[] _symbols = configuration["symbols"]!.Split(',');
     private readonly ILogger _logger = loggerFactory.CreateLogger<Function>();
 
     [Function("GenerateTweet")]
@@ -21,7 +20,7 @@ public class Function(IConfiguration configuration, ILoggerFactory loggerFactory
 #endif
         )
     {
-        _logger.LogDebug($"get stock price using Yahoo Finance API");
+        _logger.LogDebug("get stock price using Yahoo Finance API at {time}", myTimer.ScheduleStatus?.Last ?? DateTime.UtcNow);
         var result = await yahooFinanceService.GetPriceInfo(_symbols);
 
         // JJ: multi symbols support
@@ -36,7 +35,6 @@ public class Function(IConfiguration configuration, ILoggerFactory loggerFactory
         }
 
         var estZone = TimeZoneInfo.FindSystemTimeZoneById("Eastern Standard Time");
-
         var estNow = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, estZone);
         var estMarketTime = TimeZoneInfo.ConvertTimeFromUtc(marketTime, estZone);
 
@@ -46,35 +44,24 @@ public class Function(IConfiguration configuration, ILoggerFactory loggerFactory
             return;
         }
 
-        byte[] imageByte = [];
-
         _logger.LogInformation($"create image using DALL-E 3 API");
+
         var prompt = openAiService.GetPrompt(change > 0)
             .Replace("[stockName]", stockName)
             .Replace("[currentPrice]", string.Format("{0:N2}", price))
             .Replace("[priceChange]", string.Format("{0:N2}", change))
             ;
 
-        var createdImageByte = await openAiService.CreateImage(prompt);
-
-        imageByte = createdImageByte;
+        var imageByte = await openAiService.CreateImage(prompt);
 
         _logger.LogInformation($"post tweet using X API");
+
         var content = $"""
         [{estMarketTime:yyyy-MM-dd}]
-        the stock price of {GetStockNameForX(symbol)}
+        the stock price of ${symbol}
         ${string.Format("{0:N2}", price)}
         {(change > 0 ? "+" : "")}{string.Format("{0:N2}", change)} ({string.Format("{0:N2}", changePercent)}%)
         """;
-
-        static string? GetStockNameForX(string symbol)
-        {
-            return symbol switch
-            {
-                "TSLA" => "$TSLA",
-                _ => $"#{symbol}",
-            };
-        }
 
         await tweetService.PostTweet(content, imageByte);
         await slackService.SendMessage(content, imageByte);

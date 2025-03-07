@@ -4,9 +4,9 @@ using Microsoft.Extensions.Logging;
 
 namespace TweetGenerator.Tests;
 
-public class TestStartup
+public static class TestStartup
 {
-    public void ConfigureServices(IServiceCollection services)
+    public static void ConfigureServices(IServiceCollection services)
     {
         services.AddLogging(builder =>
         {

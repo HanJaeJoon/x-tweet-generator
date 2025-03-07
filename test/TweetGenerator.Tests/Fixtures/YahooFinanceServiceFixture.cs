@@ -12,8 +12,7 @@ public class YahooFinanceServiceFixture
         var services = new ServiceCollection();
         services.AddSingleton<YahooFinanceService>();
 
-        var startup = new TestStartup();
-        startup.ConfigureServices(services);
+        TestStartup.ConfigureServices(services);
 
         ServiceProvider = services.BuildServiceProvider();
     }

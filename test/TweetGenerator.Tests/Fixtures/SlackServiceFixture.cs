@@ -12,8 +12,7 @@ public class SlackServiceFixture
         var services = new ServiceCollection();
         services.AddSingleton<SlackService>();
 
-        var startup = new TestStartup();
-        startup.ConfigureServices(services);
+        TestStartup.ConfigureServices(services);
 
         ServiceProvider = services.BuildServiceProvider();
     }

@@ -6,7 +6,7 @@ namespace TweetGenerator.Tests.Tests;
 
 public class TweetTests(TweetServiceFixture fixture) : IClassFixture<TweetServiceFixture>
 {
-    private readonly TweetService _tweetSerivce = fixture.ServiceProvider.GetRequiredService<TweetService>();
+    private readonly TweetService _tweetService = fixture.ServiceProvider.GetRequiredService<TweetService>();
 
     [Fact]
     public async Task PostTweet_WithImage_Successfully()
@@ -15,7 +15,7 @@ public class TweetTests(TweetServiceFixture fixture) : IClassFixture<TweetServic
         using var httpClient = new HttpClient();
         var imageByte = await httpClient.GetByteArrayAsync("https://www.kasandbox.org/programming-images/avatars/purple-pi.png");
 
-        var tweetId = await _tweetSerivce.PostTweet(content, imageByte);
+        var tweetId = await _tweetService.PostTweet(content, imageByte);
 
         Assert.True(long.TryParse(tweetId, out _));
     }
@@ -24,7 +24,7 @@ public class TweetTests(TweetServiceFixture fixture) : IClassFixture<TweetServic
     public async Task GetTweetInfo_ByTweetId_Successfully()
     {
         var tweetId = 1747990594163810427;
-        var tweet = await _tweetSerivce.GetTweetInfo(tweetId);
+        var tweet = await _tweetService.GetTweetInfo(tweetId);
 
         Assert.NotNull(tweet);
     }

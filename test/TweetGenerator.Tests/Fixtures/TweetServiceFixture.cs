@@ -12,8 +12,7 @@ public class TweetServiceFixture
         var services = new ServiceCollection();
         services.AddSingleton<TweetService>();
 
-        var startup = new TestStartup();
-        startup.ConfigureServices(services);
+        TestStartup.ConfigureServices(services);
 
         ServiceProvider = services.BuildServiceProvider();
     }
