@@ -1,5 +1,5 @@
 ﻿using Microsoft.Extensions.Configuration;
-using OpenAI_API;
+using OpenAI.Images;
 
 namespace TweetGenerator.Services;
 
@@ -48,15 +48,20 @@ public class OpenAiService(IConfiguration configuration)
         return prompt;
     }
 
-    public async Task<(byte[], string)> CreateImage(string prompt)
+    public async Task<byte[]> CreateImage(string prompt)
     {
-        var api = new OpenAIAPI(_apiKey);
-        var result = await api.ImageGenerations.CreateImageAsync(prompt, OpenAI_API.Models.Model.DALLE3);
-        var url = result.Data[0].Url;
+        var imageClient = new ImageClient("dall-e-3", _apiKey);
+        var options = new ImageGenerationOptions()
+        {
+            Quality = GeneratedImageQuality.High,
+            Size = GeneratedImageSize.W1024xH1024,
+            Style = GeneratedImageStyle.Vivid,
+            ResponseFormat = GeneratedImageFormat.Bytes,
+        };
 
-        using var httpClient = new HttpClient();
-        var byteArray = await httpClient.GetByteArrayAsync(url);
+        GeneratedImage image = await imageClient.GenerateImageAsync(prompt, options);
+        var bytes = image.ImageBytes;
 
-        return (byteArray, url);
+        return bytes.ToArray();
     }
 }

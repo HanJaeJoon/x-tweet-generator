@@ -55,7 +55,7 @@ public class Function(IConfiguration configuration, ILoggerFactory loggerFactory
             .Replace("[priceChange]", string.Format("{0:N2}", change))
             ;
 
-        var (createdImageByte, imageUrl) = await openAiService.CreateImage(prompt);
+        var createdImageByte = await openAiService.CreateImage(prompt);
 
         imageByte = createdImageByte;
 
@@ -77,6 +77,6 @@ public class Function(IConfiguration configuration, ILoggerFactory loggerFactory
         }
 
         await tweetService.PostTweet(content, imageByte);
-        await slackService.SendMessage(content, imageUrl);
+        await slackService.SendMessage(content, imageByte);
     }
 }
