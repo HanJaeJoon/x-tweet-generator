@@ -6,32 +6,39 @@ namespace TweetGenerator.Services;
 public class OpenAiService(IConfiguration configuration)
 {
     private const string _positivePrompt = """
-        Generate an image of a [character] in an office, reacting to rise of [stockName]'s stock price.
-        The digital display shows [stockName]'s stock price at $[currentPrice], with the graph shows a candlestick chart moving upward.
-        (e.g., The price of the stock increased by $[priceChange] to $[currentPrice])
-        If you can't draw company name correctly, you might as well not draw it at all.
-        The intensity of the [character]'s joy (smiling, cheering, jumping) should correlate with the stock price increase from a baseline
-        Background elements like confetti or colleagues celebrating can be added for larger increases.
+        Generate an image of a [character] in a modern office, reacting with excitement to the rise of [stockName]'s stock price.
+        The digital display on the wall shows [stockName]'s stock price at $[currentPrice], with a vibrant candlestick chart showing a clear upward trend.
+        For example, the price of the stock increased by $[priceChange] to $[currentPrice]. If the company name [stockName] cannot be rendered accurately, omit it entirely from the display.
+        The [character]'s joy—expressed through smiling, cheering, or jumping—should scale with the stock price increase from a baseline, with subtle excitement for small gains and wild enthusiasm for large ones.
+        For larger increases, add dynamic background elements like confetti falling, colleagues cheering, or a festive atmosphere, while keeping the office setting professional with desks, computers, and financial charts.
     """;
     private const string _negativePrompt = """
-        Generate an image of a [character] in an office, reacting to a decline in [stockName]'s stock price.
-        The computer screen displays [stockName]'s stock at $[currentPrice], with the graph shows a candlestick chart moving downward.
-        (e.g., The price of the stock dropped by $[priceChange] to $[currentPrice])
-        If you can't draw company name correctly, you might as well not draw it at all.
-        The degree of the [character]'s sadness (head in hands, slumped posture, distraught expression) should reflect the stock price drop from a baseline
-        Background elements like scattered papers or a dimly lit room can intensify for larger decreases.
+        Generate an image of a [character] in a modern office, reacting with despair to a decline in [stockName]'s stock price.
+        The computer screen prominently displays [stockName]'s stock price at $[currentPrice], with a detailed candlestick chart showing a sharp downward trend.
+        For example, the price of the stock dropped by $[priceChange] to $[currentPrice]. If the company name [stockName] cannot be rendered accurately, omit it entirely from the screen.
+        The [character]'s sadness—expressed through actions like head in hands, slumped posture, or a distraught expression—should scale with the stock price drop from a baseline, with mild disappointment for small declines and deep despair for large ones.
+        For larger decreases, intensify the background with elements like scattered papers across the desk, a dimly lit room, or a chaotic office atmosphere, while maintaining a professional setting with computers, files, and financial charts.
     """;
 
     private readonly string _apiKey = configuration["OpenAiApiKey"] ?? throw new InvalidOperationException();
     private readonly string[] _characters = [
-        "person (female, Asian)", "person (male, Asian)",
-        "person (female, African)", "person (male, African)",
-        "person (female, Caucasian)", "person (male, Caucasian)",
-        "person (female, Hispanic)", "person (male, Hispanic)",
-        "person (female, Middle-Eastern)", "person (male, Middle-Eastern)",
-        "person (female, South Asian)", "person (male, South Asian)",
-        "old man", "old woman",
-        "cat", "dog", "pig"
+        "stock trader (male)", "stock trader (female)",
+        "CEO (male)", "CEO (female)",
+        "intern (male)", "intern (female)",
+        "optimist (male)", "optimist (female)",
+        "pessimist (male)", "pessimist (female)",
+        "drama queen", "drama king",
+        "wizard (male)", "wizard (female)",
+        "alien (male)", "alien (female)",
+        "cat in a suit",
+        "dog with glasses",
+        "pig with a tie",
+        "bear in a vest",
+        "bull with a briefcase",
+        "owl with a calculator",
+        "fox in a trench coat",
+        "rabbit with a stopwatch",
+        "penguin in a bowtie"
     ];
 
     public string GetPrompt(bool isPositive)
