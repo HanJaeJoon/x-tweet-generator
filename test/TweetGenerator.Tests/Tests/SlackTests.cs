@@ -9,11 +9,10 @@ public class SlackTests(SlackServiceFixture fixture) : IClassFixture<SlackServic
     private readonly SlackService _slackService = fixture.ServiceProvider.GetRequiredService<SlackService>();
 
     [Fact]
-    public async Task UploadFile_Successfully()
+    public async Task SendMessage_Successfully()
     {
-        var testImagePath = "Assets/sample.png";
-        var fileContent = File.ReadAllBytes(testImagePath);
-
-        await _slackService.UploadFile(fileContent);
+        using var httpClient = new HttpClient();
+        var byteArray = await httpClient.GetByteArrayAsync("https://placehold.co/600x400.jpg");
+        await _slackService.SendMessage("일희일비봇 테스트 중입니다.", byteArray);
     }
 }

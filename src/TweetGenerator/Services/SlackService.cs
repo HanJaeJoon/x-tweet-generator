@@ -12,22 +12,35 @@ public class SlackService(IConfiguration configuration, ILoggerFactory loggerFac
 
     private readonly ILogger _logger = loggerFactory.CreateLogger<Function>();
 
-    public async Task SendMessage(string content, string imageUrl)
+    public async Task SendMessage(string content, byte[]? imageByte = null)
     {
-        var client = new SlackTaskClient(_slackToken);
-        var attachment = new Attachment()
-        {
-            image_url = imageUrl,
-            fallback = "(image created with DALL-E 3 in Open AI)",
-        };
+        var slackClient = new SlackTaskClient(_slackToken);
 
-        // JJ: DALL-E 3 최소 용량으로 이미지 생성해도 3MB가 넘어서 슬랙에서 안 보이는 문제
-        // html trigger 사용 하는 방법?
-        var response = await client.PostMessageAsync(_channel, content, attachments: [attachment]);
-
-        if (!response.ok)
+        if (imageByte is not null)
         {
-            _logger.LogError($"Message sending failed. error: {response.error}");
+            var fileUploadResponse = await slackClient.UploadFileAsync(
+                fileData: imageByte,
+                fileName: $"{DateTime.UtcNow:yyyyMMdd}",
+                channelIds: [_channel],
+                title: "image created with DALL-E 3 in Open AI"
+            );
+
+            if (!fileUploadResponse.ok)
+            {
+                _logger.LogError("File upload failed: {error}", fileUploadResponse.error);
+                return;
+            }
+
+            var fileUrl = fileUploadResponse.file.permalink;
+
+            content += $"\n{fileUrl}";
+        }
+
+        var messageResponse = await slackClient.PostMessageAsync(_channel, content);
+
+        if (!messageResponse.ok)
+        {
+            _logger.LogError("Message sending failed: {error}", messageResponse.error);
         }
     }
 
