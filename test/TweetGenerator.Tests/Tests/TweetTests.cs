@@ -13,7 +13,7 @@ public class TweetTests(TweetServiceFixture fixture) : IClassFixture<TweetServic
     {
         var content = "API 테스트 중입니다.";
         using var httpClient = new HttpClient();
-        var imageByte = await httpClient.GetByteArrayAsync("https://www.kasandbox.org/programming-images/avatars/purple-pi.png");
+        var imageByte = await httpClient.GetByteArrayAsync("https://placehold.co/600x400.jpg");
 
         var tweetId = await _tweetService.PostTweet(content, imageByte);
 

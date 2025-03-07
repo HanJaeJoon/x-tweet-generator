@@ -5,10 +5,9 @@ using TweetGenerator.Services;
 
 namespace TweetGenerator;
 
-public class Function(IConfiguration configuration, ILoggerFactory loggerFactory,
-    YahooFinanceService yahooFinanceService, OpenAiService openAiService, TweetService tweetService, SlackService slackService)
+public class Function(IConfiguration configuration, ILoggerFactory loggerFactory, OpenAIService openAiService, TweetService tweetService, SlackService slackService)
 {
-    private readonly string[] _symbols = configuration["symbols"]!.Split(',');
+    private readonly string[] _symbols = configuration["symbols"]?.Split(',') ?? [];
     private readonly ILogger _logger = loggerFactory.CreateLogger<Function>();
 
     [Function("GenerateTweet")]
@@ -21,7 +20,7 @@ public class Function(IConfiguration configuration, ILoggerFactory loggerFactory
         )
     {
         _logger.LogDebug("get stock price using Yahoo Finance API at {time}", myTimer.ScheduleStatus?.Last ?? DateTime.UtcNow);
-        var result = await yahooFinanceService.GetPriceInfo(_symbols);
+        var result = await YahooFinanceService.GetPriceInfo(_symbols);
 
         // JJ: multi symbols support
         var (marketState, stockName, marketTime, price, change, changePercent) = result.First();

@@ -3,7 +3,7 @@ using OpenAI.Images;
 
 namespace TweetGenerator.Services;
 
-public class OpenAiService(IConfiguration configuration)
+public class OpenAIService(IConfiguration configuration)
 {
     private const string _positivePrompt = """
         Generate an image of a [character] in a modern office, reacting with excitement to the rise of [stockName]'s stock price.
@@ -45,12 +45,11 @@ public class OpenAiService(IConfiguration configuration)
     {
         var prompt = isPositive ? _positivePrompt : _negativePrompt;
 
-        var random = new Random();
-        var index = random.Next(_characters.Length);
+        var index = Random.Shared.Next(_characters.Length);
 
         prompt = prompt
             .Replace("[character]", _characters[index])
-            ;
+        ;
 
         return prompt;
     }
@@ -67,8 +66,7 @@ public class OpenAiService(IConfiguration configuration)
         };
 
         GeneratedImage image = await imageClient.GenerateImageAsync(prompt, options);
-        var bytes = image.ImageBytes;
 
-        return bytes.ToArray();
+        return image.ImageBytes.ToArray();
     }
 }

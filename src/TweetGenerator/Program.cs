@@ -11,7 +11,7 @@ var host = new HostBuilder()
         services.ConfigureFunctionsApplicationInsights();
         services
             .AddTransient<YahooFinanceService>()
-            .AddTransient<OpenAiService>()
+            .AddTransient<OpenAIService>()
             .AddTransient<TweetService>()
             .AddTransient<SlackService>()
         ;

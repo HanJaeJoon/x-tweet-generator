@@ -12,7 +12,7 @@ public class YahooFinanceService(ILoggerFactory loggerFactory)
         Field.RegularMarketTime, Field.RegularMarketPrice, Field.RegularMarketChange, Field.RegularMarketChangePercent
     ];
 
-    public async Task<IList<(string, string, DateTime, double, double, double)>> GetPriceInfo(string[] symbols)
+    public static async Task<IList<(string, string, DateTime, double, double, double)>> GetPriceInfo(string[] symbols)
     {
         var security = await Yahoo.Symbols(symbols).Fields(_fields).QueryAsync();
 
@@ -32,15 +32,5 @@ public class YahooFinanceService(ILoggerFactory loggerFactory)
         }
 
         return results;
-    }
-
-    public async Task GetStockHistory(string symbol)
-    {
-        var history = await Yahoo.GetHistoricalAsync(symbol, DateTime.Today.AddDays(-1), DateTime.Today, Period.Daily);
-
-        foreach (var candle in history)
-        {
-            _logger.LogInformation($"DateTime: {candle.DateTime}, Open: {candle.Open}, High: {candle.High}, Low: {candle.Low}, Close: {candle.Close}, Volume: {candle.Volume}, AdjustedClose: {candle.AdjustedClose}");
-        }
     }
 }

@@ -31,21 +31,19 @@ public class TweetService(IConfiguration configuration)
             var uploadedImage = await userClient.Upload.UploadTweetImageAsync(image);
             if (uploadedImage?.Id is not null)
             {
-                parameters.Media = new TweetV2Attacthments { MediaIds = [uploadedImage.Id.ToString()!], };
+                parameters.Media = new TweetV2Attachments { MediaIds = [uploadedImage.Id.ToString()!], };
             }
         }
 
-        var result = await userClient.Execute.AdvanceRequestAsync(
-            (ITwitterRequest request) =>
-            {
-                var jsonBody = JsonSerializer.Serialize(parameters);
-                var content = new StringContent(jsonBody, Encoding.UTF8, "application/json");
+        var result = await userClient.Execute.AdvanceRequestAsync(request =>
+        {
+            var jsonBody = JsonSerializer.Serialize(parameters);
+            var content = new StringContent(jsonBody, Encoding.UTF8, "application/json");
 
-                request.Query.Url = "https://api.twitter.com/2/tweets";
-                request.Query.HttpMethod = Tweetinvi.Models.HttpMethod.POST;
-                request.Query.HttpContent = content;
-            }
-        );
+            request.Query.Url = "https://api.twitter.com/2/tweets";
+            request.Query.HttpMethod = Tweetinvi.Models.HttpMethod.POST;
+            request.Query.HttpContent = content;
+        });
 
         if (!result.Response.IsSuccessStatusCode)
         {
@@ -74,10 +72,10 @@ public class TweetService(IConfiguration configuration)
 
         [JsonPropertyName("media")]
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-        public TweetV2Attacthments? Media { get; set; }
+        public TweetV2Attachments? Media { get; set; }
     }
 
-    private record TweetV2Attacthments
+    private record TweetV2Attachments
     {
         [JsonPropertyName("media_ids")]
         public required string[] MediaIds { get; init; }
