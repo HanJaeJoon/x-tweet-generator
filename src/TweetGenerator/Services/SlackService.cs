@@ -1,26 +1,23 @@
-﻿using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 using SlackAPI;
+using TweetGenerator.Models;
 
 namespace TweetGenerator.Services;
 
-public class SlackService(IConfiguration configuration, ILoggerFactory loggerFactory)
+public class SlackService(Config config, ILoggerFactory loggerFactory)
 {
-    private readonly string _slackToken = configuration["SlackToken"] ?? throw new InvalidOperationException();
-    private readonly string _channel = configuration["SlackChannel"] ?? throw new InvalidOperationException();
-
     private readonly ILogger _logger = loggerFactory.CreateLogger<Function>();
 
-    public async Task SendMessage(string content, byte[]? imageByte = null)
+    public async Task SendMessage(string channel, string symbol, string content, byte[]? imageByte = null)
     {
-        var slackClient = new SlackTaskClient(_slackToken);
+        var slackClient = new SlackTaskClient(config.SlackToken);
 
         if (imageByte is not null)
         {
             var fileUploadResponse = await slackClient.UploadFileAsync(
                 fileData: imageByte,
-                fileName: $"{DateTime.UtcNow:yyyyMMdd}",
-                channelIds: [_channel],
+                fileName: $"{symbol}{DateTime.UtcNow:yyyyMMdd}",
+                channelIds: [channel],
                 title: "image created with DALL-E 3 in Open AI"
             );
 
@@ -35,7 +32,7 @@ public class SlackService(IConfiguration configuration, ILoggerFactory loggerFac
             content += $"\n{fileUrl}";
         }
 
-        var messageResponse = await slackClient.PostMessageAsync(_channel, content);
+        var messageResponse = await slackClient.PostMessageAsync(channel, content);
 
         if (!messageResponse.ok)
         {

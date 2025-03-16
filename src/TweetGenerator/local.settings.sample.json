@@ -3,7 +3,6 @@
   "Values": {
     "AzureWebJobsStorage": "UseDevelopmentStorage=true",
     "FUNCTIONS_WORKER_RUNTIME": "dotnet-isolated",
-    "Symbols": "TSLA",
     "XConsumerKey": "",
     "XConsumerKeySecret": "",
     "XAccessKey": "",
@@ -11,6 +10,6 @@
     "XBearerToken": "",
     "OpenAiApiKey": "",
     "SlackToken": "",
-    "SlackChannel": ""
+    "Stocks": "[{\"Symbol\": \"TSLA\", \"SlackChannel\": \"\"}, {\"Symbol\": \"PLTR\", \"SlackChannel\": \"\"}]"
   }
 }

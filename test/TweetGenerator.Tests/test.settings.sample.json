@@ -1,5 +1,4 @@
 {
-  "Symbols": "TSLA",
   "XConsumerKey": "",
   "XConsumerKeySecret": "",
   "XAccessKey": "",
@@ -7,5 +6,15 @@
   "XBearerToken": "",
   "OpenAiApiKey": "",
   "SlackToken": "",
-  "SlackChannel": ""
+  "SlackChannel": "",
+  "Stocks": [
+    {
+      "Symbol": "TSLA",
+      "SlackChannel": "#일희일비-테슬라"
+    },
+    {
+      "Symbol": "PLTR",
+      "SlackChannel": "#일희일비-팔란티어"
+    }
+  ]
 }

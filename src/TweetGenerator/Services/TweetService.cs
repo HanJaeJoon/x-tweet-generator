@@ -1,27 +1,22 @@
-﻿using Microsoft.Extensions.Configuration;
-using System.Text;
+﻿using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using TweetGenerator.Models;
 using Tweetinvi;
 using Tweetinvi.Models;
 using Tweetinvi.Models.V2;
 
 namespace TweetGenerator.Services;
 
-public class TweetService(IConfiguration configuration)
+public class TweetService(Config config)
 {
-    private readonly string _consumerKey = configuration["XConsumerKey"] ?? throw new InvalidOperationException();
-    private readonly string _consumerKeySecret = configuration["XConsumerKeySecret"] ?? throw new InvalidOperationException();
-    private readonly string _accessKey = configuration["XAccessKey"] ?? throw new InvalidOperationException();
-    private readonly string _accessKeySecret = configuration["XAccessKeySecret"] ?? throw new InvalidOperationException();
-
     public async Task<string?> PostTweet(string tweet, byte[]? image = null)
     {
         var userClient = new TwitterClient(
-            _consumerKey,
-            _consumerKeySecret,
-            _accessKey,
-            _accessKeySecret
+            config.XConsumerKey,
+            config.XConsumerKeySecret,
+            config.XAccessKey,
+            config.XAccessKeySecret
         );
 
         var parameters = new TweetV2PostRequest() { Text = tweet };
@@ -59,7 +54,7 @@ public class TweetService(IConfiguration configuration)
     // X API Free Tier에서 Read 권한 없음
     public async Task<TweetV2> GetTweetInfo(long id)
     {
-        var credentials = new TwitterCredentials(_consumerKey, _consumerKeySecret, _accessKey, _accessKeySecret);
+        var credentials = new TwitterCredentials(config.XConsumerKey, config.XConsumerKeySecret, config.XAccessKey, config.XAccessKeySecret);
         var client = new TwitterClient(credentials);
         var response = await client.TweetsV2.GetTweetAsync(id);
         return response.Tweet;
