@@ -1,12 +1,15 @@
 ﻿using Microsoft.Azure.Functions.Worker;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using System.Text.Json;
 using TweetGenerator.Models;
 using TweetGenerator.Services;
 
 namespace TweetGenerator;
 
-public class Function(Config config, ILoggerFactory loggerFactory, OpenAIService openAiService, TweetService tweetService, SlackService slackService)
+public class Function(IConfiguration configuration, ILoggerFactory loggerFactory, OpenAIService openAiService, TweetService tweetService, SlackService slackService)
 {
+    private readonly List<Stock> _stocks = JsonSerializer.Deserialize<List<Stock>>(configuration["Stocks"] ?? "[]") ?? [];
     private readonly ILogger _logger = loggerFactory.CreateLogger<Function>();
 
     [Function("GenerateTweet")]
@@ -20,9 +23,9 @@ public class Function(Config config, ILoggerFactory loggerFactory, OpenAIService
     {
         _logger.LogDebug("get stock price using Yahoo Finance API at {time}", myTimer.ScheduleStatus?.Last ?? DateTime.UtcNow);
 
-        var stockInfo = await YahooFinanceService.GetPriceInfo([.. config.Stocks.Select(s => s.Symbol)]);
+        var stockInfo = await YahooFinanceService.GetPriceInfo([.. _stocks.Select(s => s.Symbol)]);
 
-        foreach (var stock in config.Stocks)
+        foreach (var stock in _stocks)
         {
             _logger.LogInformation("[Stock: {stock}]", stock);
 

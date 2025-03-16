@@ -1,16 +1,18 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using SlackAPI;
-using TweetGenerator.Models;
 
 namespace TweetGenerator.Services;
 
-public class SlackService(Config config, ILoggerFactory loggerFactory)
+public class SlackService(IConfiguration configuration, ILoggerFactory loggerFactory)
 {
+    private readonly string _slackToken = configuration["SlackToken"] ?? throw new InvalidOperationException();
+
     private readonly ILogger _logger = loggerFactory.CreateLogger<Function>();
 
     public async Task SendMessage(string channel, string symbol, string content, byte[]? imageByte = null)
     {
-        var slackClient = new SlackTaskClient(config.SlackToken);
+        var slackClient = new SlackTaskClient(_slackToken);
 
         if (imageByte is not null)
         {

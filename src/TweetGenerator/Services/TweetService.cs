@@ -1,22 +1,27 @@
-﻿using System.Text;
+﻿using Microsoft.Extensions.Configuration;
+using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using TweetGenerator.Models;
 using Tweetinvi;
 using Tweetinvi.Models;
 using Tweetinvi.Models.V2;
 
 namespace TweetGenerator.Services;
 
-public class TweetService(Config config)
+public class TweetService(IConfiguration configuration)
 {
+    private readonly string _consumerKey = configuration["XConsumerKey"] ?? throw new InvalidOperationException();
+    private readonly string _consumerKeySecret = configuration["XConsumerKeySecret"] ?? throw new InvalidOperationException();
+    private readonly string _accessKey = configuration["XAccessKey"] ?? throw new InvalidOperationException();
+    private readonly string _accessKeySecret = configuration["XAccessKeySecret"] ?? throw new InvalidOperationException();
+
     public async Task<string?> PostTweet(string tweet, byte[]? image = null)
     {
         var userClient = new TwitterClient(
-            config.XConsumerKey,
-            config.XConsumerKeySecret,
-            config.XAccessKey,
-            config.XAccessKeySecret
+            _consumerKey,
+            _consumerKeySecret,
+            _accessKey,
+            _accessKeySecret
         );
 
         var parameters = new TweetV2PostRequest() { Text = tweet };
@@ -54,7 +59,7 @@ public class TweetService(Config config)
     // X API Free Tier에서 Read 권한 없음
     public async Task<TweetV2> GetTweetInfo(long id)
     {
-        var credentials = new TwitterCredentials(config.XConsumerKey, config.XConsumerKeySecret, config.XAccessKey, config.XAccessKeySecret);
+        var credentials = new TwitterCredentials(_consumerKey, _consumerKeySecret, _accessKey, _accessKeySecret);
         var client = new TwitterClient(credentials);
         var response = await client.TweetsV2.GetTweetAsync(id);
         return response.Tweet;
@@ -75,7 +80,6 @@ public class TweetService(Config config)
         [JsonPropertyName("media_ids")]
         public required string[] MediaIds { get; init; }
     }
-
 
     public class TweetContent
     {

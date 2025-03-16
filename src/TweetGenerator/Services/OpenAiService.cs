@@ -1,9 +1,9 @@
-﻿using OpenAI.Images;
-using TweetGenerator.Models;
+﻿using Microsoft.Extensions.Configuration;
+using OpenAI.Images;
 
 namespace TweetGenerator.Services;
 
-public class OpenAIService(Config config)
+public class OpenAIService(IConfiguration configuration)
 {
     private const string _positivePrompt = """
         Generate an image of a [character] in a modern office, reacting with excitement to the rise of [stockName]'s stock price.
@@ -20,6 +20,7 @@ public class OpenAIService(Config config)
         For larger decreases, intensify the background with elements like scattered papers across the desk, a dimly lit room, or a chaotic office atmosphere, while maintaining a professional setting with computers, files, and financial charts.
     """;
 
+    private readonly string _apiKey = configuration["OpenAiApiKey"] ?? throw new InvalidOperationException();
     private readonly string[] _characters = [
         "stock trader (male)", "stock trader (female)",
         "CEO (male)", "CEO (female)",
@@ -55,7 +56,7 @@ public class OpenAIService(Config config)
 
     public async Task<byte[]> CreateImage(string prompt)
     {
-        var imageClient = new ImageClient("dall-e-3", config.OpenAiApiKey);
+        var imageClient = new ImageClient("dall-e-3", _apiKey);
         var options = new ImageGenerationOptions()
         {
             Quality = GeneratedImageQuality.High,
