@@ -8,7 +8,7 @@
     "XAccessKey": "",
     "XAccessKeySecret": "",
     "XBearerToken": "",
-    "OpenAiApiKey": "",
+    "OpenAIApiKey": "",
     "SlackToken": "",
     "Stocks": "[{\"Symbol\": \"TSLA\", \"SlackChannel\": \"\"}, {\"Symbol\": \"PLTR\", \"SlackChannel\": \"\"}]"
   }
