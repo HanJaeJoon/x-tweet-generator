@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using System.Text.Json;
 using TweetGenerator.Models;
 using TweetGenerator.Services;
+using YahooFinanceApi;
 
 namespace TweetGenerator;
 
@@ -20,68 +21,94 @@ public class Function(IConfiguration configuration, ILoggerFactory loggerFactory
 #endif
         )
     {
+        var stocks = JsonSerializer.Deserialize<List<Stock>>(configuration["Stocks"] ?? "[]") ?? [];
+        _logger.LogInformation("Starting tweet generation for {count} stocks at {now}", stocks.Count, DateTime.UtcNow);
+
+        _logger.LogDebug("get stock price using Yahoo Finance API at {time}", myTimer.ScheduleStatus?.Last ?? DateTime.UtcNow);
+
+        IReadOnlyDictionary<string, Security> stockInfo;
+
         try
         {
-            var stocks = JsonSerializer.Deserialize<List<Stock>>(configuration["Stocks"] ?? "[]") ?? [];
-            _logger.LogInformation("Starting tweet generation for {count} stocks at {now}", stocks.Count, DateTime.UtcNow);
+            stockInfo = await YahooFinanceService.GetPriceInfo([.. stocks.Select(s => s.Symbol)]);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError("Error occurred while fetching stock prices: {exception}", ex.Message);
+            return;
+        }
 
-            _logger.LogDebug("get stock price using Yahoo Finance API at {time}", myTimer.ScheduleStatus?.Last ?? DateTime.UtcNow);
+        foreach (var stock in stocks)
+        {
+            _logger.LogInformation("[Stock: {stock}]", stock);
 
-            var stockInfo = await YahooFinanceService.GetPriceInfo([.. stocks.Select(s => s.Symbol)]);
+            var symbol = stock.Symbol;
+            var security = stockInfo[symbol];
 
-            foreach (var stock in stocks)
+            _logger.LogDebug($"validate");
+
+            if (security.MarketState is "REGULAR")
             {
-                _logger.LogInformation("[Stock: {stock}]", stock);
+                _logger.LogInformation("Market is open");
+                return;
+            }
 
-                var symbol = stock.Symbol;
-                var security = stockInfo[symbol];
+            var marketTime = DateTimeOffset.FromUnixTimeSeconds(security.RegularMarketTime).UtcDateTime;
+            var estZone = TimeZoneInfo.FindSystemTimeZoneById("Eastern Standard Time");
+            var estNow = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, estZone);
+            var estMarketTime = TimeZoneInfo.ConvertTimeFromUtc(marketTime, estZone);
 
-                _logger.LogDebug($"validate");
+            if (estMarketTime.Day != estNow.Day)
+            {
+                _logger.LogInformation("Invalid Day");
+                return;
+            }
 
-                if (security.MarketState is "REGULAR")
-                {
-                    _logger.LogInformation("Market is open");
-                    return;
-                }
+            _logger.LogInformation($"create image using DALL-E 3 API");
 
-                var marketTime = DateTimeOffset.FromUnixTimeSeconds(security.RegularMarketTime).UtcDateTime;
-                var estZone = TimeZoneInfo.FindSystemTimeZoneById("Eastern Standard Time");
-                var estNow = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, estZone);
-                var estMarketTime = TimeZoneInfo.ConvertTimeFromUtc(marketTime, estZone);
+            var prompt = openAiService.GetPrompt(security.RegularMarketChange > 0)
+                .Replace("[stockName]", security.ShortName)
+                .Replace("[currentPrice]", string.Format("{0:N2}", security.RegularMarketPrice))
+                .Replace("[priceChange]", string.Format("{0:N2}", security.RegularMarketChange))
+            ;
 
-                if (estMarketTime.Day != estNow.Day)
-                {
-                    _logger.LogInformation("Invalid Day");
-                    return;
-                }
+            byte[]? imageByte = null;
 
-                _logger.LogInformation($"create image using DALL-E 3 API");
+            try
+            {
+                imageByte = await openAiService.CreateImage(prompt);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError("Error occurred while creating image: {exception}", ex.Message);
+            }
 
-                var prompt = openAiService.GetPrompt(security.RegularMarketChange > 0)
-                    .Replace("[stockName]", security.ShortName)
-                    .Replace("[currentPrice]", string.Format("{0:N2}", security.RegularMarketPrice))
-                    .Replace("[priceChange]", string.Format("{0:N2}", security.RegularMarketChange))
-                ;
-
-                var imageByte = await openAiService.CreateImage(prompt);
-
-                var content = $"""
+            var content = $"""
                 [{estMarketTime:yyyy-MM-dd}]
                 the stock price of ${symbol}
                 ${string.Format("{0:N2}", security.RegularMarketPrice)}
                 {(security.RegularMarketChange > 0 ? "+" : "")}{string.Format("{0:N2}", security.RegularMarketChange)} ({string.Format("{0:N2}", security.RegularMarketChangePercent)}%)
-                """;
+            """;
 
+            try
+            {
                 _logger.LogInformation("post tweet using X API");
                 await tweetService.PostTweet(content, imageByte);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError("Error occurred while posting tweet: {exception}", ex.Message);
+            }
 
+            try
+            {
                 _logger.LogInformation("send slack message using Slack API");
                 await slackService.SendMessage(stock.SlackChannel, symbol, content, imageByte);
             }
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError("Error occurred while generating tweet: {exception}", ex.Message);
+            catch (Exception ex)
+            {
+                _logger.LogError("Error occurred while sending slack message: {exception}", ex.Message);
+            }
         }
     }
 }
