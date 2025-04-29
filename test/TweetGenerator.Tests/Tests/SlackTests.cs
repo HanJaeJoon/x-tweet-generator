@@ -3,6 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using System.Text.Json;
 using TweetGenerator.Models;
 using TweetGenerator.Services;
+using TweetGenerator.Tests.Assets;
 using TweetGenerator.Tests.Fixtures;
 
 namespace TweetGenerator.Tests.Tests;
@@ -30,5 +31,13 @@ public class SlackTests : IClassFixture<SlackServiceFixture>
         {
             await _slackService.SendMessage(stock.SlackChannel, stock.Symbol, "일희일비봇 테스트 중입니다.", byteArray);
         }
+    }
+
+    [Fact]
+    public async Task SendMessage_WithBase64Image_Successfully()
+    {
+        var byteArray = Convert.FromBase64String(Constants.Base64Image);
+
+        await _slackService.SendMessage("#일희일비-테슬라", "TSLA", "일희일비봇 테스트 중입니다.", byteArray);
     }
 }
