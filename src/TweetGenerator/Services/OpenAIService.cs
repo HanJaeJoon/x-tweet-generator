@@ -59,10 +59,7 @@ public class OpenAIService(IConfiguration configuration)
         var imageClient = new ImageClient("gpt-image-1", _apiKey);
         var options = new ImageGenerationOptions()
         {
-            Quality = GeneratedImageQuality.High,
             Size = GeneratedImageSize.W1024xH1024,
-            Style = GeneratedImageStyle.Vivid,
-            ResponseFormat = GeneratedImageFormat.Bytes,
         };
 
         GeneratedImage image = await imageClient.GenerateImageAsync(prompt, options);
