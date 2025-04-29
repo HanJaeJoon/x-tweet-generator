@@ -120,10 +120,11 @@ public class Function(IConfiguration configuration, ILoggerFactory loggerFactory
             }
 
             var content = $"""
-                [{estMarketTime:yyyy-MM-dd}]
-                the stock price of ${symbol}
-                ${string.Format("{0:N2}", security.RegularMarketPrice)}
-                {(security.RegularMarketChange > 0 ? "+" : "")}{string.Format("{0:N2}", security.RegularMarketChange)} ({string.Format("{0:N2}", security.RegularMarketChangePercent)}%)
+            [{estMarketTime:yyyy-MM-dd}]
+            ${symbol}
+            ${string.Format("{0:N2}", security.RegularMarketPrice)}
+            {(security.RegularMarketChange > 0 ? "+" : "")}${string.Format("{0:N2}", security.RegularMarketChange)} ({string.Format("{0:N2}", security.RegularMarketChangePercent)}%)
+            ${(security.MarketCap >= 1_000_000_000_000 ? string.Format("{0:N2}T", security.MarketCap / 1_000_000_000_000) : string.Format("{0:N2}B", security.MarketCap / 1_000_000_000))}
             """;
 
             try
