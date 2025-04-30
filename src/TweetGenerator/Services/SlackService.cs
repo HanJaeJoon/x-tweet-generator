@@ -7,6 +7,7 @@ namespace TweetGenerator.Services;
 public class SlackService(IConfiguration configuration, ILoggerFactory loggerFactory)
 {
     private readonly string _slackToken = configuration["SlackToken"] ?? throw new InvalidOperationException();
+    private readonly string _openAIImageModel = configuration["OpenAIImageModel"] ?? throw new InvalidOperationException();
 
     private readonly ILogger _logger = loggerFactory.CreateLogger<Function>();
 
@@ -20,7 +21,7 @@ public class SlackService(IConfiguration configuration, ILoggerFactory loggerFac
                 fileData: imageByte,
                 fileName: $"{symbol}{DateTime.UtcNow:yyyyMMdd}",
                 channelIds: [channel],
-                title: "image created with DALL-E 3 in Open AI"
+                title: $"Image of {symbol} stock generated with {_openAIImageModel} in Open AI"
             );
 
             if (!fileUploadResponse.ok)

@@ -1,10 +1,11 @@
 {
-  "XConsumerKey": "",
-  "XConsumerKeySecret": "",
-  "XAccessKey": "",
-  "XAccessKeySecret": "",
-  "XBearerToken": "",
-  "OpenAIApiKey": "",
-  "SlackToken": "",
-  "Stocks": "[{\"Symbol\": \"TSLA\", \"SlackChannel\": \"\"}, {\"Symbol\": \"PLTR\", \"SlackChannel\": \"\"}]"
+    "XConsumerKey": "",
+    "XConsumerKeySecret": "",
+    "XAccessKey": "",
+    "XAccessKeySecret": "",
+    "XBearerToken": "",
+    "OpenAIApiKey": "",
+    "OpenAIImageModel": "gpt-image-1",
+    "SlackToken": "",
+    "Stocks": "[{\"Symbol\": \"TSLA\", \"SlackChannel\": \"\"}, {\"Symbol\": \"PLTR\", \"SlackChannel\": \"\"}]"
 }
