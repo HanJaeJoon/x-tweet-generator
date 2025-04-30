@@ -17,8 +17,8 @@ public class Function(IConfiguration configuration, ILoggerFactory loggerFactory
     [Function("GenerateTweet")]
     public async Task RunScheduled([TimerTrigger("30 0 16 * * Mon-Fri")] TimerInfo timerInfo)
     {
-        var utcNow = timerInfo.ScheduleStatus?.Last ?? DateTime.UtcNow;
-        _logger.LogInformation("Timer triggered at: {now}", utcNow);
+        var utcNow = DateTime.UtcNow;
+        _logger.LogInformation("Timer triggered at: {now} (Last run: {Last})", utcNow, timerInfo.ScheduleStatus?.Last);
 
         await RunImpl(utcNow);
     }
@@ -50,8 +50,6 @@ public class Function(IConfiguration configuration, ILoggerFactory loggerFactory
     {
         var stocks = JsonSerializer.Deserialize<List<Stock>>(configuration["Stocks"] ?? "[]") ?? [];
         _logger.LogInformation("Starting tweet generation for {count} stocks at {now}", stocks.Count, utcNow);
-
-        _logger.LogDebug("get stock price using Yahoo Finance API at {time}", utcNow);
 
         IReadOnlyDictionary<string, Security>? stockInfo = null;
 
@@ -104,8 +102,8 @@ public class Function(IConfiguration configuration, ILoggerFactory loggerFactory
 
             var prompt = openAiService.GetPrompt(security.RegularMarketChange > 0)
                 .Replace("[stockName]", security.ShortName)
-                .Replace("[currentPrice]", string.Format("{0:N2}", security.RegularMarketPrice))
-                .Replace("[priceChange]", string.Format("{0:N2}", security.RegularMarketChange))
+                .Replace("[currentPrice]", $"{security.RegularMarketPrice:N2}")
+                .Replace("[priceChange]", $"{security.RegularMarketChange:N2}")
             ;
 
             byte[]? imageByte = null;
@@ -119,12 +117,14 @@ public class Function(IConfiguration configuration, ILoggerFactory loggerFactory
                 _logger.LogError("Error occurred while creating image: {exception}", ex.Message);
             }
 
-            var content = $"""
+            string sign = (security.RegularMarketChange > 0 ? "+" : "");
+            string marketCap = (security.MarketCap >= 1_000_000_000_000 ? string.Format("{0:N2}T", security.MarketCap / 1_000_000_000_000) : string.Format("{0:N2}B", security.MarketCap / 1_000_000_000));
+            string content = $"""
             [{estMarketTime:yyyy-MM-dd}]
             ${symbol}
-            ${string.Format("{0:N2}", security.RegularMarketPrice)}
-            {(security.RegularMarketChange > 0 ? "+" : "")}${string.Format("{0:N2}", security.RegularMarketChange)} ({string.Format("{0:N2}", security.RegularMarketChangePercent)}%)
-            ${(security.MarketCap >= 1_000_000_000_000 ? string.Format("{0:N2}T", security.MarketCap / 1_000_000_000_000) : string.Format("{0:N2}B", security.MarketCap / 1_000_000_000))}
+            ${security.RegularMarketPrice:N2}
+            {sign}${security.RegularMarketChange:N2} ({sign}{security.RegularMarketChangePercent:N2}%)
+            ${marketCap}
             """;
 
             try
