@@ -11,6 +11,7 @@ public class YahooFinanceTests
     {
         var result = await YahooFinanceService.GetPriceInfo(_symbols);
 
+        Assert.NotNull(result);
         Assert.NotEmpty(result);
     }
 }
