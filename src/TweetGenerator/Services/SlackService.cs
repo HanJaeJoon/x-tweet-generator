@@ -1,6 +1,8 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using SlackAPI;
+using SlackNet;
+using SlackNet.WebApi;
+using ILogger = Microsoft.Extensions.Logging.ILogger;
 
 namespace TweetGenerator.Services;
 
@@ -13,33 +15,63 @@ public class SlackService(IConfiguration configuration, ILoggerFactory loggerFac
 
     public async Task SendMessage(string channel, string symbol, string content, byte[]? imageByte = null)
     {
-        var slackClient = new SlackTaskClient(_slackToken);
+        var slackClient = new SlackServiceBuilder()
+            .UseApiToken(_slackToken)
+            .GetApiClient();
 
-        if (imageByte is not null)
+        var channels = await slackClient.Conversations.List(true);
+        var channelId = channels?.Channels?.FirstOrDefault(x => x.Name == channel.Replace("#", ""))?.Id;
+
+        if (channelId is null)
         {
-            var fileUploadResponse = await slackClient.UploadFileAsync(
-                fileData: imageByte,
-                fileName: $"{symbol}{DateTime.UtcNow:yyyyMMdd}",
-                channelIds: [channel],
-                title: $"Image of {symbol} stock generated with {_openAIImageModel} in Open AI"
-            );
-
-            if (!fileUploadResponse.ok)
-            {
-                _logger.LogError("File upload failed: {error}", fileUploadResponse.error);
-                return;
-            }
-
-            var fileUrl = fileUploadResponse.file.permalink;
-
-            content += $"\n{fileUrl}";
+            _logger.LogError("Channel not found: {channel}", channel);
+            return;
         }
 
-        var messageResponse = await slackClient.PostMessageAsync(channel, content);
+        bool imageUploaded = false;
 
-        if (!messageResponse.ok)
+        if (imageByte?.Length > 0)
         {
-            _logger.LogError("Message sending failed: {error}", messageResponse.error);
+            try
+            {
+                var urlResponse = await slackClient.Files.GetUploadUrlExternal(fileName: $"{symbol}{DateTime.UtcNow:yyyyMMdd}", length: imageByte.Length)
+                    ?? throw new InvalidOperationException("Failed to get upload URL from Slack");
+
+                using var httpClient = new HttpClient();
+                using var fileContent = new ByteArrayContent(imageByte);
+
+                fileContent.Headers.Add("Content-Type", "application/octet-stream");
+
+                var uploadResponse = await httpClient.PostAsync(urlResponse.UploadUrl, fileContent);
+
+                uploadResponse.EnsureSuccessStatusCode();
+
+                var completeResponse = await slackClient.Files.CompleteUploadExternal(
+                    files: [new()
+                    {
+                        Id = urlResponse.FileId,
+                        Title = $"Image of {symbol} stock generated with {_openAIImageModel} in Open AI",
+                    }],
+                    channelId: channelId,
+                    initialComment: content
+                );
+
+                if (!completeResponse.Any())
+                {
+                    throw new InvalidOperationException("Failed to complete file upload to Slack");
+                }
+
+                imageUploaded = true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Exception during image upload");
+            }
+        }
+
+        if (!imageUploaded)
+        {
+            await slackClient.Chat.PostMessage(new Message { Channel = channelId, Text = content });
         }
     }
 }
