@@ -19,8 +19,9 @@ public class SlackService(IConfiguration configuration, ILoggerFactory loggerFac
             .UseApiToken(_slackToken)
             .GetApiClient();
 
+        var channelName = channel.Replace("#", "");
         var channels = await slackClient.Conversations.List(true);
-        var channelId = channels?.Channels?.FirstOrDefault(x => x.Name == channel.Replace("#", ""))?.Id;
+        var channelId = channels?.Channels?.FirstOrDefault(x => string.Equals(x.Name, channelName, StringComparison.OrdinalIgnoreCase))?.Id;
 
         if (channelId is null)
         {
