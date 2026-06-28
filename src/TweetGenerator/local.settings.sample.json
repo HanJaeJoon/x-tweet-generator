@@ -11,6 +11,6 @@
         "OpenAIApiKey": "",
         "OpenAIImageModel": "gpt-image-1",
         "SlackToken": "",
-        "Stocks": "[{\"Symbol\": \"TSLA\", \"SlackChannel\": \"\"}, {\"Symbol\": \"PLTR\", \"SlackChannel\": \"\"}]"
+        "Stocks": "[{\"Symbol\": \"TSLA\", \"SlackChannel\": \"\"}, {\"Symbol\": \"PLTR\", \"SlackChannel\": \"\"}, {\"Symbol\": \"SPCX\", \"SlackChannel\": \"\"}]"
     }
 }
