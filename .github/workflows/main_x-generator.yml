@@ -12,10 +12,18 @@ on:
 env:
   AZURE_FUNCTIONAPP_PACKAGE_PATH: 'src/TweetGenerator' # set this to the path to your web app project, defaults to the repository root
   DOTNET_VERSION: '8.0.x' # set this to the dotnet version to use
+  AZURE_FUNCTIONAPP_NAME: 'x-generator'
+
+permissions:
+  id-token: write   # OIDC 로그인에 필요
+  contents: read
 
 jobs:
   build-and-deploy:
     runs-on: windows-latest
+    env:
+      # 시크릿이 등록되기 전에는 아래 설정 스텝을 통째로 건너뛰기 위한 가드
+      AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
     steps:
       - name: 'Checkout GitHub Action'
         uses: actions/checkout@v4
@@ -36,7 +44,48 @@ jobs:
         uses: Azure/functions-action@v1
         id: fa
         with:
-          app-name: 'x-generator'
+          app-name: ${{ env.AZURE_FUNCTIONAPP_NAME }}
           slot-name: 'Production'
           package: '${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}/output'
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_23EC1D688B7D49CC88975982D9FBB13F }}
+
+      # --- 배포 후 App Settings(환경 변수) 적용 ---
+      - name: 'Azure Login (OIDC)'
+        if: env.AZURE_CLIENT_ID != ''
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: 'Apply Function App Settings'
+        if: env.AZURE_CLIENT_ID != ''
+        shell: bash
+        run: |
+          az functionapp config appsettings set \
+            --name "$AZURE_FUNCTIONAPP_NAME" \
+            --resource-group "$AZURE_RESOURCE_GROUP" \
+            --settings \
+              "XConsumerKey=$X_CONSUMER_KEY" \
+              "XConsumerKeySecret=$X_CONSUMER_KEY_SECRET" \
+              "XAccessKey=$X_ACCESS_KEY" \
+              "XAccessKeySecret=$X_ACCESS_KEY_SECRET" \
+              "OpenAIApiKey=$OPENAI_API_KEY" \
+              "OpenAIImageModel=$OPENAI_IMAGE_MODEL" \
+              "SlackToken=$SLACK_TOKEN" \
+              "Stocks=$STOCKS" \
+            --output none
+          echo "App settings applied."
+        env:
+          AZURE_FUNCTIONAPP_NAME: ${{ env.AZURE_FUNCTIONAPP_NAME }}
+          AZURE_RESOURCE_GROUP: ${{ secrets.AZURE_RESOURCE_GROUP }}
+          # --- 시크릿 (GitHub Secrets) ---
+          X_CONSUMER_KEY: ${{ secrets.X_CONSUMER_KEY }}
+          X_CONSUMER_KEY_SECRET: ${{ secrets.X_CONSUMER_KEY_SECRET }}
+          X_ACCESS_KEY: ${{ secrets.X_ACCESS_KEY }}
+          X_ACCESS_KEY_SECRET: ${{ secrets.X_ACCESS_KEY_SECRET }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          SLACK_TOKEN: ${{ secrets.SLACK_TOKEN }}
+          # --- 비시크릿 (평문 관리 가능) ---
+          OPENAI_IMAGE_MODEL: 'gpt-image-1'
+          STOCKS: '[{"Symbol":"TSLA","SlackChannel":"#일희일비-테슬라"},{"Symbol":"PLTR","SlackChannel":"#일희일비-팔란티어"},{"Symbol":"SPCX","SlackChannel":"#일희일비-테슬라"}]'
