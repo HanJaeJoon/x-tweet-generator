@@ -1,0 +1,19 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "agent",
+            "if": "Bash(git commit*)",
+            "model": "claude-sonnet-5",
+            "timeout": 120,
+            "statusMessage": "md 문서 동기화 검사 중",
+            "prompt": "git 커밋 전 문서 동기화 검사다. 순서대로 확인하라.\n1) `git branch --show-current`로 현재 브랜치를 확인한다. main이 아니면 무조건 통과시켜라(작업 브랜치의 중간 커밋은 검사하지 않는다 - squash merge 시 main 커밋에서만 검사).\n2) main이면 `git diff --cached --stat`으로 스테이징된 변경을 보고, 필요하면 `git diff --cached -- <경로>`로 내용을 확인한다.\n3) apps/ 또는 packages/의 제품 동작 변경(새 기능/화면/메뉴, API 엔드포인트, 설정(.env) 필드, 아키텍처/프로세스 구성, 안전 게이트, 배포 절차에 영향)이 포함되어 있는데, 그 변경이 README.md / CLAUDE.md / docs/deploy.md의 기존 서술을 낡게 만들거나 새 문서화가 필요함에도 해당 md가 이 커밋에 함께 스테이징되어 있지 않으면 실패(block) 처리하라. 실패 사유에는 어떤 문서의 어떤 절을 어떻게 고쳐야 하는지 구체적으로 적어라.\n4) 문서 영향이 없는 변경(테스트만, 내부 리팩토링, 버그 수정, 스타일/포맷, 문서 자체 커밋, 의존성 잠금 파일)은 통과시켜라. 판단이 애매하면 통과시켜라(과차단 금지)."
+          }
+        ]
+      }
+    ]
+  }
+}
