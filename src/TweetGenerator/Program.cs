@@ -10,9 +10,9 @@ var host = new HostBuilder()
         services.AddApplicationInsightsTelemetryWorkerService();
         services.ConfigureFunctionsApplicationInsights();
         services
-            .AddTransient<OpenAIService>()
-            .AddTransient<TweetService>()
-            .AddTransient<SlackService>()
+            .AddSingleton<OpenAIService>()
+            .AddSingleton<TweetService>()
+            .AddSingleton<SlackService>()
         ;
     })
 .Build();

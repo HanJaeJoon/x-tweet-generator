@@ -11,10 +11,10 @@ namespace TweetGenerator.Services;
 public class TweetService(IConfiguration configuration)
 {
     private readonly TwitterClient _client = new(
-        configuration["XConsumerKey"] ?? throw new InvalidOperationException(),
-        configuration["XConsumerKeySecret"] ?? throw new InvalidOperationException(),
-        configuration["XAccessKey"] ?? throw new InvalidOperationException(),
-        configuration["XAccessKeySecret"] ?? throw new InvalidOperationException()
+        configuration["XConsumerKey"] ?? throw new InvalidOperationException("XConsumerKey is not configured"),
+        configuration["XConsumerKeySecret"] ?? throw new InvalidOperationException("XConsumerKeySecret is not configured"),
+        configuration["XAccessKey"] ?? throw new InvalidOperationException("XAccessKey is not configured"),
+        configuration["XAccessKeySecret"] ?? throw new InvalidOperationException("XAccessKeySecret is not configured")
     );
 
     public async Task<string?> PostTweet(string tweet, byte[]? image = null)

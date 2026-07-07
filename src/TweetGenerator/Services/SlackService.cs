@@ -10,9 +10,9 @@ public class SlackService(IConfiguration configuration, ILogger<SlackService> lo
 {
     private static readonly HttpClient _httpClient = new();
 
-    private readonly string _imageModel = configuration["OpenAIImageModel"] ?? throw new InvalidOperationException();
+    private readonly string _imageModel = configuration["OpenAIImageModel"] ?? throw new InvalidOperationException("OpenAIImageModel is not configured");
     private readonly ISlackApiClient _slackClient = new SlackServiceBuilder()
-        .UseApiToken(configuration["SlackToken"] ?? throw new InvalidOperationException())
+        .UseApiToken(configuration["SlackToken"] ?? throw new InvalidOperationException("SlackToken is not configured"))
         .GetApiClient();
 
     private readonly ILogger _logger = logger;

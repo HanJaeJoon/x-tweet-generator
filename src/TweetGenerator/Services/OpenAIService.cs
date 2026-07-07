@@ -13,8 +13,8 @@ public enum MarketSentiment
 public class OpenAIService(IConfiguration configuration)
 {
     private readonly ImageClient _imageClient = new(
-        configuration["OpenAIImageModel"] ?? throw new InvalidOperationException(),
-        configuration["OpenAIApiKey"] ?? throw new InvalidOperationException()
+        configuration["OpenAIImageModel"] ?? throw new InvalidOperationException("OpenAIImageModel is not configured"),
+        configuration["OpenAIApiKey"] ?? throw new InvalidOperationException("OpenAIApiKey is not configured")
     );
 
     private const string PositivePrompt = """
