@@ -2,6 +2,6 @@
 
 public class Stock
 {
-    public required string Symbol { get; set; }
-    public required string SlackChannel { get; set; }
+    public required string Symbol { get; init; }
+    public required string SlackChannel { get; init; }
 }

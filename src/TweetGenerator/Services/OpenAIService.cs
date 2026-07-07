@@ -1,28 +1,30 @@
-﻿using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Configuration;
 using OpenAI.Images;
 
 namespace TweetGenerator.Services;
 
 public class OpenAIService(IConfiguration configuration)
 {
-    private readonly string _apiKey = configuration["OpenAIApiKey"] ?? throw new InvalidOperationException();
-    private readonly string _openAIImageModel = configuration["OpenAIImageModel"] ?? throw new InvalidOperationException();
+    private readonly ImageClient _imageClient = new(
+        configuration["OpenAIImageModel"] ?? throw new InvalidOperationException(),
+        configuration["OpenAIApiKey"] ?? throw new InvalidOperationException()
+    );
 
-    private const string _positivePrompt = """
+    private const string PositivePrompt = """
         Generate an image of a [character] in a modern office, reacting with excitement to the rise of [stockName]'s stock price.
         The digital display on the wall shows [stockName]'s stock price at $[currentPrice], with a vibrant candlestick chart showing a clear upward trend.
         For example, the price of the stock increased by $[priceChange] to $[currentPrice]. If the company name [stockName] cannot be rendered accurately, omit it entirely from the display.
         The [character]'s joy—expressed through smiling, cheering, or jumping—should scale with the stock price increase from a baseline, with subtle excitement for small gains and wild enthusiasm for large ones.
         For larger increases, add dynamic background elements like confetti falling, colleagues cheering, or a festive atmosphere, while keeping the office setting professional with desks, computers, and financial charts.
     """;
-    private const string _negativePrompt = """
+    private const string NegativePrompt = """
         Generate an image of a [character] in a modern office, reacting with despair to a decline in [stockName]'s stock price.
         The computer screen prominently displays [stockName]'s stock price at $[currentPrice], with a detailed candlestick chart showing a sharp downward trend.
         For example, the price of the stock dropped by $[priceChange] to $[currentPrice]. If the company name [stockName] cannot be rendered accurately, omit it entirely from the screen.
         The [character]'s sadness—expressed through actions like head in hands, slumped posture, or a distraught expression—should scale with the stock price drop from a baseline, with mild disappointment for small declines and deep despair for large ones.
         For larger decreases, intensify the background with elements like scattered papers across the desk, a dimly lit room, or a chaotic office atmosphere, while maintaining a professional setting with computers, files, and financial charts.
     """;
-    private readonly string[] _characters = [
+    private static readonly string[] _characters = [
         "stock trader (male)", "stock trader (female)",
         "CEO (male)", "CEO (female)",
         "intern (male)", "intern (female)",
@@ -42,28 +44,26 @@ public class OpenAIService(IConfiguration configuration)
         "penguin in a bowtie"
     ];
 
-    public string GetPrompt(bool isPositive)
+    public string GetPrompt(bool isPositive, string stockName, string currentPrice, string priceChange)
     {
-        var prompt = isPositive ? _positivePrompt : _negativePrompt;
+        var prompt = isPositive ? PositivePrompt : NegativePrompt;
+        var character = _characters[Random.Shared.Next(_characters.Length)];
 
-        var index = Random.Shared.Next(_characters.Length);
-
-        prompt = prompt
-            .Replace("[character]", _characters[index])
-        ;
-
-        return prompt;
+        return prompt
+            .Replace("[character]", character)
+            .Replace("[stockName]", stockName)
+            .Replace("[currentPrice]", currentPrice)
+            .Replace("[priceChange]", priceChange);
     }
 
     public async Task<byte[]> CreateImage(string prompt)
     {
-        var imageClient = new ImageClient(_openAIImageModel, _apiKey);
-        var options = new ImageGenerationOptions()
+        var options = new ImageGenerationOptions
         {
             Size = GeneratedImageSize.W1024xH1024,
         };
 
-        GeneratedImage image = await imageClient.GenerateImageAsync(prompt, options);
+        GeneratedImage image = await _imageClient.GenerateImageAsync(prompt, options);
 
         return image.ImageBytes.ToArray();
     }

@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Configuration;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -10,32 +10,27 @@ namespace TweetGenerator.Services;
 
 public class TweetService(IConfiguration configuration)
 {
-    private readonly string _consumerKey = configuration["XConsumerKey"] ?? throw new InvalidOperationException();
-    private readonly string _consumerKeySecret = configuration["XConsumerKeySecret"] ?? throw new InvalidOperationException();
-    private readonly string _accessKey = configuration["XAccessKey"] ?? throw new InvalidOperationException();
-    private readonly string _accessKeySecret = configuration["XAccessKeySecret"] ?? throw new InvalidOperationException();
+    private readonly TwitterClient _client = new(
+        configuration["XConsumerKey"] ?? throw new InvalidOperationException(),
+        configuration["XConsumerKeySecret"] ?? throw new InvalidOperationException(),
+        configuration["XAccessKey"] ?? throw new InvalidOperationException(),
+        configuration["XAccessKeySecret"] ?? throw new InvalidOperationException()
+    );
 
     public async Task<string?> PostTweet(string tweet, byte[]? image = null)
     {
-        var userClient = new TwitterClient(
-            _consumerKey,
-            _consumerKeySecret,
-            _accessKey,
-            _accessKeySecret
-        );
-
-        var parameters = new TweetV2PostRequest() { Text = tweet };
+        var parameters = new TweetV2PostRequest { Text = tweet };
 
         if (image?.Length > 0)
         {
-            var uploadedImage = await userClient.Upload.UploadTweetImageAsync(image);
+            var uploadedImage = await _client.Upload.UploadTweetImageAsync(image);
             if (uploadedImage?.Id is not null)
             {
                 parameters.Media = new TweetV2Attachments { MediaIds = [uploadedImage.Id.ToString()!], };
             }
         }
 
-        var result = await userClient.Execute.AdvanceRequestAsync(request =>
+        var result = await _client.Execute.AdvanceRequestAsync(request =>
         {
             var jsonBody = JsonSerializer.Serialize(parameters);
             var content = new StringContent(jsonBody, Encoding.UTF8, "application/json");
@@ -47,11 +42,10 @@ public class TweetService(IConfiguration configuration)
 
         if (!result.Response.IsSuccessStatusCode)
         {
-            throw new Exception($"Error when posting tweet:\n{result.Content}");
+            throw new InvalidOperationException($"Error when posting tweet:\n{result.Content}");
         }
 
-        var content = result.Response.Content;
-        var tweetContent = JsonSerializer.Deserialize<TweetContent>(content);
+        var tweetContent = JsonSerializer.Deserialize<TweetContent>(result.Response.Content);
 
         return tweetContent?.Data?.TweetIds?.FirstOrDefault();
     }
@@ -59,9 +53,7 @@ public class TweetService(IConfiguration configuration)
     // X API Free Tier에서 Read 권한 없음
     public async Task<TweetV2> GetTweetInfo(long id)
     {
-        var credentials = new TwitterCredentials(_consumerKey, _consumerKeySecret, _accessKey, _accessKeySecret);
-        var client = new TwitterClient(credentials);
-        var response = await client.TweetsV2.GetTweetAsync(id);
+        var response = await _client.TweetsV2.GetTweetAsync(id);
         return response.Tweet;
     }
 
@@ -81,13 +73,13 @@ public class TweetService(IConfiguration configuration)
         public required string[] MediaIds { get; init; }
     }
 
-    public class TweetContent
+    private record TweetContent
     {
         [JsonPropertyName("data")]
-        public Data? Data { get; set; }
+        public TweetData? Data { get; set; }
     }
 
-    public class Data
+    private record TweetData
     {
         [JsonPropertyName("edit_history_tweet_ids")]
         public string[]? TweetIds { get; set; }

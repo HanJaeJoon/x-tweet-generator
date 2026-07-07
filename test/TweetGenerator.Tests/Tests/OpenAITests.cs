@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection;
 using TweetGenerator.Services;
 using TweetGenerator.Tests.Fixtures;
 
@@ -22,6 +22,5 @@ public class OpenAITests(OpenAIServiceFixture fixture) : IClassFixture<OpenAISer
         var data = await _openAIService.CreateImage(prompt);
 
         Assert.NotEmpty(data);
-        Assert.True(data.Length > 0);
     }
 }

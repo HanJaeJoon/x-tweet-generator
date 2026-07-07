@@ -1,8 +1,8 @@
-﻿using YahooFinanceApi;
+using YahooFinanceApi;
 
 namespace TweetGenerator.Services;
 
-public class YahooFinanceService
+public static class YahooFinanceService
 {
     private static readonly Field[] _fields = [
         Field.MarketState,

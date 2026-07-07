@@ -18,7 +18,7 @@ public class SlackTests : IClassFixture<SlackServiceFixture>
     {
         _slackService = fixture.ServiceProvider.GetRequiredService<SlackService>();
         _configuration = fixture.ServiceProvider.GetRequiredService<IConfiguration>();
-        _stocks = JsonSerializer.Deserialize<List<Stock>>(_configuration["Stocks"] ?? "[]") ?? []; ;
+        _stocks = JsonSerializer.Deserialize<List<Stock>>(_configuration["Stocks"] ?? "[]") ?? [];
     }
 
     [Fact]
