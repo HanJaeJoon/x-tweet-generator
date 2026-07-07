@@ -135,8 +135,15 @@ public class Function(IConfiguration configuration, ILogger<Function> logger, Op
     {
         _logger.LogInformation("create image using OpenAI API");
 
+        var sentiment = security.RegularMarketChange switch
+        {
+            > 0 => MarketSentiment.Positive,
+            < 0 => MarketSentiment.Negative,
+            _ => MarketSentiment.Neutral,
+        };
+
         var prompt = openAIService.GetPrompt(
-            security.RegularMarketChange > 0,
+            sentiment,
             security.ShortName,
             $"{security.RegularMarketPrice:N2}",
             $"{security.RegularMarketChange:N2}"

@@ -3,6 +3,13 @@ using OpenAI.Images;
 
 namespace TweetGenerator.Services;
 
+public enum MarketSentiment
+{
+    Positive,
+    Neutral,
+    Negative,
+}
+
 public class OpenAIService(IConfiguration configuration)
 {
     private readonly ImageClient _imageClient = new(
@@ -16,6 +23,13 @@ public class OpenAIService(IConfiguration configuration)
         For example, the price of the stock increased by $[priceChange] to $[currentPrice]. If the company name [stockName] cannot be rendered accurately, omit it entirely from the display.
         The [character]'s joy—expressed through smiling, cheering, or jumping—should scale with the stock price increase from a baseline, with subtle excitement for small gains and wild enthusiasm for large ones.
         For larger increases, add dynamic background elements like confetti falling, colleagues cheering, or a festive atmosphere, while keeping the office setting professional with desks, computers, and financial charts.
+    """;
+    private const string NeutralPrompt = """
+        Generate an image of a [character] in a modern office, reacting with calm indifference to [stockName]'s stock price staying flat.
+        The digital display on the wall shows [stockName]'s stock price at $[currentPrice], with a candlestick chart showing a sideways, flat trend.
+        For example, the price of the stock stayed unchanged at $[currentPrice]. If the company name [stockName] cannot be rendered accurately, omit it entirely from the display.
+        The [character]'s reaction should be relaxed and neutral, such as shrugging, sipping coffee, or glancing at the screen without much concern.
+        Keep the office setting professional and quiet, with desks, computers, and financial charts, and a calm everyday atmosphere.
     """;
     private const string NegativePrompt = """
         Generate an image of a [character] in a modern office, reacting with despair to a decline in [stockName]'s stock price.
@@ -44,9 +58,14 @@ public class OpenAIService(IConfiguration configuration)
         "penguin in a bowtie"
     ];
 
-    public string GetPrompt(bool isPositive, string stockName, string currentPrice, string priceChange)
+    public string GetPrompt(MarketSentiment sentiment, string stockName, string currentPrice, string priceChange)
     {
-        var prompt = isPositive ? PositivePrompt : NegativePrompt;
+        var prompt = sentiment switch
+        {
+            MarketSentiment.Positive => PositivePrompt,
+            MarketSentiment.Neutral => NeutralPrompt,
+            _ => NegativePrompt,
+        };
         var character = _characters[Random.Shared.Next(_characters.Length)];
 
         return prompt
