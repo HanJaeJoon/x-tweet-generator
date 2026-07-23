@@ -164,8 +164,8 @@ public class Function(IConfiguration configuration, ILogger<Function> logger, Op
     {
         var sign = security.RegularMarketChange > 0 ? "+" : "";
         var marketCap = security.MarketCap >= 1_000_000_000_000
-            ? $"{security.MarketCap / 1_000_000_000_000:N2}T"
-            : $"{security.MarketCap / 1_000_000_000:N2}B";
+            ? $"{security.MarketCap / 1_000_000_000_000m:N2}T"
+            : $"{security.MarketCap / 1_000_000_000m:N2}B";
 
         return $"""
             [{estMarketTime:yyyy-MM-dd}]
